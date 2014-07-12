@@ -1,5 +1,3 @@
-final String datapath = "/Users/cahir/Amiga/src/demoscene/artwork/";
-
 RayCaster raycast;
 UVMapRenderer uvmap;
 float pitch = 0, yaw = 0, roll = 0;
@@ -13,7 +11,7 @@ void setup() {
   // raycast = new RayPlane();
   // ((RayPlane)raycast).calculateForm(new PVector(0, 1, 0), new PVector(0, 1, 0));
 
-  uvmap = new UVMapRenderer(datapath + "textures/rork-1.png", raycast);
+  uvmap = new UVMapRenderer("rork-1.png", raycast);
 }
 
 void mouseDragged() {
@@ -49,6 +47,4 @@ void draw() {
   m.rotateZ(TWO_PI * -roll);
   raycast.recalcView(m);
   uvmap.render();
-
-  drawCameraPlane();
 }
