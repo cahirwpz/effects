@@ -1,14 +1,21 @@
 UVMap uvmap;
 
 UVGenerator[] generators = {
+  new Flush(),
+  new Ball(),
+  new HotMagma(),
+  new HorizontalPlanes(),
+  new VerticalPlanes(),
+  new WavyStarBurst(),
+  new MagneticFlare(),
+  new HypnoticRainbowSpiral(),
   new FancyEye(),
-  new InnerCycle(),
+  new Anamorphosis(),
   new BentPlane(),
-  new WeirdTunnel(),
+  new RotatingTunnelOfWonder(),
   new Twist(),
   new Swirl(),
-  new Some6(),
-  new Some7(),
+
   new Some8(),
   new Some9()
 };

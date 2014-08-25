@@ -3,7 +3,7 @@ float frpart(float x) {
 }
 
 class UVCoord {
-  float u, v;
+  float u, v, w;
 }
 
 interface UVGenerator {
@@ -44,10 +44,18 @@ class UVMap {
       for (int x = 0; x < width; x++, p++) {
         float u = map[y][x].u + t / 4;
         float v = map[y][x].v + t / 4;
+        float w = constrain(map[y][x].w, -1.0, 1.0);
         int i = int(frpart(u) * texture.width);
         int j = int(frpart(v) * texture.height);
+        color c = texture.pixels[(i * 256 + j) & 0xffff];
+        
+        if (w >= 0) {
+          c = lerpColor(c, color(255, 255, 255), w);
+        } else {
+          c = lerpColor(c, color(0, 0, 0), abs(w));
+        } 
       
-        applet.pixels[p] = texture.pixels[(i * 256 + j) & 0xffff];
+        applet.pixels[p] = c;
       }
     }
   }

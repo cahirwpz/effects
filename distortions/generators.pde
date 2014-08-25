@@ -8,13 +8,14 @@ class BentPlane implements UVGenerator {
   }
 }
 
-class WeirdTunnel implements UVGenerator {
+class RotatingTunnelOfWonder implements UVGenerator {
   void calculate(UVCoord p, float x, float y) {
     float a = atan2(x, y);
     float r = dist(x, y, 0.0, 0.0);
     
     p.u = 0.3 / (r + 0.5 * x);
     p.v = 3.0 * a / PI;
+    p.w = -p.u / 2;
   }
 }
 
@@ -38,13 +39,14 @@ class Swirl implements UVGenerator {
   }
 }
 
-class InnerCycle implements UVGenerator {
+class Anamorphosis implements UVGenerator {
   void calculate(UVCoord p, float x, float y) {
     float a = atan2(x, y);
     float r = dist(x, y, 0.0, 0.0);
     
     p.u = cos(a) / (3.0 * r);
     p.v = sin(a) / (3.0 * r);
+    p.w = -1 / (6 * r);
   }
 }
 
@@ -58,7 +60,7 @@ class FancyEye implements UVGenerator {
   }
 }
 
-class Some6 implements UVGenerator {
+class Flush implements UVGenerator {
   void calculate(UVCoord p, float x, float y) {
     float a = atan2(x, y);
     float r = dist(x, y, 0.0, 0.0);
@@ -68,13 +70,13 @@ class Some6 implements UVGenerator {
   }
 }
 
-class Some7 implements UVGenerator {
+class HotMagma implements UVGenerator {
   void calculate(UVCoord p, float x, float y) {
     float a = atan2(x, y);
     float r = dist(x, y, 0.0, 0.0);
 
     p.u = 0.5 * a / PI;
-    p.v = sin(5.0 * r);
+    p.v = sin(2.0 * r);
   }
 }
 
@@ -107,3 +109,69 @@ class Some10 implements UVGenerator {
     p.v = 8 * y * sq(1.5 - r);
   }
 }
+
+class HypnoticRainbowSpiral implements UVGenerator {
+  void calculate(UVCoord p, float x, float y) {
+    float a = atan2(x, y);
+    float r = dist(x, y, 0.0, 0.0);
+
+    p.v = sin(a + cos(3 * r)) / pow(r, 0.25);
+    p.u = cos(a + cos(3 * r)) / pow(r, 0.25);
+  }
+}
+
+class WavyStarBurst implements UVGenerator {
+  void calculate(UVCoord p, float x, float y) {
+    float a = atan2(x, y);
+    float r = dist(x, y, 0.0, 0.0);
+
+    p.v = (-0.4 / r) + 0.1 * sin(8.0 * a);
+    p.u = 0.5 + 0.5 * a / PI;
+    p.w = - p.v / (16 * r);
+  }
+}
+
+class MagneticFlare implements UVGenerator {
+  void calculate(UVCoord p, float x, float y) {
+    float a = atan2(x, y);
+    float r = dist(x, y, 0.0, 0.0);
+    
+    p.u = 1 / (r + 1.5 + 0.5 * sin(5 * a));
+    p.v = a * 3 / PI;
+    p.w = 0.6 + p.u - r * 1.5;
+  }
+}
+
+class VerticalPlanes implements UVGenerator {
+  void calculate(UVCoord p, float x, float y) {
+    float a = atan2(x, y);
+    float r = dist(x, y, 0.0, 0.0);
+
+    p.u = 0.25 * x / abs(y);
+    p.v = 0.25 / abs(y);
+    p.w = -0.5 * p.v;
+  }
+}
+
+class HorizontalPlanes implements UVGenerator {
+  void calculate(UVCoord p, float x, float y) {
+    float a = atan2(x, y);
+    float r = dist(x, y, 0.0, 0.0);
+
+    p.u = 0.25 * y / abs(x);
+    p.v = 0.25 / abs(x);
+    p.w = -0.5 * p.v;
+  }
+}
+
+class Ball implements UVGenerator {
+  void calculate(UVCoord p, float x, float y) {
+    float a = atan2(x, y);
+    float r = dist(x, y, 0.0, 0.0);
+    float r2 = sq(r);
+
+    p.v = x * (1.5 - sqrt(1 - r2)) / (r2 + 1);
+    p.u = y * (1.5 - sqrt(1 - r2)) / (r2 + 1);
+  }
+}
+
