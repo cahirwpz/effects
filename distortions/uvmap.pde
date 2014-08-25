@@ -13,8 +13,11 @@ interface UVGenerator {
 class UVMap {
   UVCoord[][] map;
   PImage texture;
+  int width, height;
 
-  UVMap() {
+  UVMap(int width, int height) {
+    this.width = width;
+    this.height = height;
     map = new UVCoord[height][width];
   }
   
@@ -37,14 +40,14 @@ class UVMap {
   }
   
   void render(PApplet applet, float t) {
-    for (int y = 0; y < height; y++) {
-      for (int x = 0; x < width; x++) {
+    for (int y = 0, p = 0; y < height; y++) {
+      for (int x = 0; x < width; x++, p++) {
         float u = map[y][x].u + t / 4;
         float v = map[y][x].v + t / 4;
         int i = int(frpart(u) * texture.width);
         int j = int(frpart(v) * texture.height);
       
-        applet.set(x, y, texture.get(i, j));
+        applet.pixels[p] = texture.pixels[(i * 256 + j) & 0xffff];
       }
     }
   }

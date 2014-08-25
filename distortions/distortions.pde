@@ -21,7 +21,7 @@ void setup() {
   
   println("Press LEFT or RIGHT key to change UVMap!");
   
-  uvmap = new UVMap();
+  uvmap = new UVMap(width, height);
   uvmap.attachTexture("texture.png");
   uvmap.generate(generators[i]);
 }
@@ -40,5 +40,7 @@ void keyPressed() {
 }
 
 void draw() {
-  uvmap.render(this, frameCount / frameRate); 
+  loadPixels();
+  uvmap.render(this, frameCount / frameRate);
+  updatePixels();
 }
