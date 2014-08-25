@@ -5,6 +5,7 @@ class BentPlane implements UVGenerator {
     
     p.u = 0.1 * y / (0.11 + r * 0.15);
     p.v = 0.1 * x / (0.11 + r * 0.15);
+    p.w = sqrt(sq(p.u) + sq(p.v)) - 0.5;
   }
 }
 
@@ -117,6 +118,7 @@ class HypnoticRainbowSpiral implements UVGenerator {
 
     p.v = sin(a + cos(3 * r)) / pow(r, 0.25);
     p.u = cos(a + cos(3 * r)) / pow(r, 0.25);
+    p.w = 1.2 - r * 2;
   }
 }
 
@@ -126,7 +128,7 @@ class WavyStarBurst implements UVGenerator {
     float r = dist(x, y, 0.0, 0.0);
 
     p.v = (-0.4 / r) + 0.1 * sin(8.0 * a);
-    p.u = 0.5 + 0.5 * a / PI;
+    p.u = 1.0 + a / PI;
     p.w = - p.v / (16 * r);
   }
 }
@@ -174,4 +176,3 @@ class Ball implements UVGenerator {
     p.u = y * (1.5 - sqrt(1 - r2)) / (r2 + 1);
   }
 }
-

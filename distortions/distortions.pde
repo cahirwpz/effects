@@ -1,30 +1,31 @@
 UVMap uvmap;
 
 UVGenerator[] generators = {
-  new Flush(),
-  new Ball(),
-  new HotMagma(),
+  new FancyEye(),
+  new BentPlane(),
   new HorizontalPlanes(),
   new VerticalPlanes(),
   new WavyStarBurst(),
   new MagneticFlare(),
   new HypnoticRainbowSpiral(),
-  new FancyEye(),
   new Anamorphosis(),
-  new BentPlane(),
+  new Flush(),
+  new Ball(),
+  new HotMagma(),
   new RotatingTunnelOfWonder(),
   new Twist(),
   new Swirl(),
-
   new Some8(),
-  new Some9()
+  new Some9(),
+  new Some10()
 };
 
 int i = 0;
+final int FRAMERATE = 25;
 
 void setup() {
   size(640, 480);
-  frameRate(25);
+  frameRate(FRAMERATE);
   
   println("Press LEFT or RIGHT key to change UVMap!");
   
@@ -48,6 +49,6 @@ void keyPressed() {
 
 void draw() {
   loadPixels();
-  uvmap.render(this, frameCount / frameRate);
+  uvmap.render(this, float(frameCount) / FRAMERATE);
   updatePixels();
 }
