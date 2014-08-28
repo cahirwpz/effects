@@ -1,5 +1,6 @@
 .DS_Store
 applet
+sketch.properties
 application.linux32
 application.linux64
 application.windows32
