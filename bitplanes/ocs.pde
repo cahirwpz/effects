@@ -221,6 +221,11 @@ void initOCS(int _depth) {
   copperList = new CopIns[(width / 8) * height];
 }
 
+void copperClear() {
+  for (int i = 0; i < copperList.length; i++)
+    copperList[i] = null;
+}
+
 void copper(int x, int y, int n, int c) {
   assert (x & 7) == 0;
   copperList[(x / 8) + (y * width / 8)] = new CopIns(n & 0x1f, c);
