@@ -48,6 +48,11 @@ class Bitplane {
     data[pos(x, y)] ^= bit(x); 
   }
   
+  void clear() {
+    for (int i = 0; i < data.length; i++)
+      data[i] = 0;
+  }
+  
   void fill() {
     for (int y = 0; y < height; y++) {
       boolean p = false;
@@ -212,7 +217,7 @@ void initOCS(int _depth) {
   bpl = new Bitplane[depth];
   for (int i = 0; i < depth; i++)
       bpl[i] = new Bitplane(width, height);
-  palette = new color[1 << _depth];
+  palette = new color[32];
   copperList = new CopIns[(width / 8) * height];
 }
 
