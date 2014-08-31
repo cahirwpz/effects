@@ -442,6 +442,37 @@ class CopIns {
   }
 };
 
+class Sprite {
+  // Each word stores only 16 bits.
+  int data[];
+  // Sprite is always 16 pixels wide.
+  int height;
+  // Position on screen.
+  int x, y;
+  // Use another sprite to display 16-color sprite.
+  boolean attached;
+  
+  Sprite(int _h) {
+    height = _h;
+    data = new int[_h * 2];
+  }
+
+  int get(int x, int y) {
+    int p = (data[y * 2 + 0] >> (15 - x)) & 1;
+    int q = (data[y * 2 + 1] >> (15 - x)) & 1;
+    
+    return (p << 1) | q;
+  }
+
+  void set(int x, int y, int v) {
+    int p = (v >> 1) & 1;
+    int q = v & 1;
+    
+    data[y * 2 + 0] |= p << (15 - x);
+    data[y * 2 + 1] |= q << (15 - x);
+  }
+};
+
 // Limits color space to OCS 12-bit RGB.
 color rgb12(color c) {
   int r = (c & 0xf00000) >> 20;
@@ -450,6 +481,7 @@ color rgb12(color c) {
   return color((r << 4) | r, (g << 4) | g, (b << 4) | b);
 }
 
+Sprite spr[];
 Bitplane bpl[];
 // Number of bitplanes.
 int depth;
@@ -466,6 +498,7 @@ void initOCS(int _depth) {
   bpl = new Bitplane[depth];
   for (int i = 0; i < depth; i++)
     bpl[i] = new Bitplane(width, height);
+  spr = new Sprite[8];
   palette = new color[32];
   copperList = new CopIns[(width / 8) * height];
 }
@@ -490,8 +523,31 @@ void updateOCS() {
   color _palette[] = new color[32];
   for (int i = 0; i < 32; i++)
     _palette[i] = rgb12(palette[i]);
+    
+  Sprite _spr[] = new Sprite[8];
+  for (int i = 0; i < 8; i++)
+    _spr[i] = new Sprite(1);
 
   for (int y = 0, s = 0, i = 0; y < height; y++) {
+    /* Sprite DMA simulation. */
+    int sprmask = 0;
+    
+    for (int j = 0; j < 8; j++) {
+      if (spr[j] == null)
+        continue;
+      if (y < spr[j].y || y >= spr[j].y + spr[j].height)
+        continue;
+        
+      int sy = y - spr[j].y;
+      
+      _spr[j].attached = spr[j].attached;
+      _spr[j].x = spr[j].x;
+      _spr[j].data[0] = spr[j].data[2 * sy];
+      _spr[j].data[1] = spr[j].data[2 * sy + 1];
+      
+      sprmask |= 1 << j;
+    }
+    
     for (int x = 0; x < width; x++, i++) {
       if ((x & 7) == 0) {
         CopIns slot = copperList[s];
@@ -507,6 +563,17 @@ void updateOCS() {
 
       while (--d >= 0)
         v = (v << 1) | ((bpl[d].data[word] >> bit) & 1);
+
+      for (int j = 7; j >= 0; j--) {
+        if ((sprmask & (1 << j)) == 0)
+          continue;
+        if (x < _spr[j].x || x >= _spr[j].x + 16)
+          continue;
+        int w = _spr[j].get(x - spr[j].x, 0);
+        
+        if (w > 0)
+          v = w + (j & ~1) * 2 + 16;
+      }
 
       pixels[i] = _palette[v];
     }
