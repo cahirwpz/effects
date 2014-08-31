@@ -52,6 +52,11 @@ class Bitplane {
     for (int i = 0; i < data.length; i++)
       data[i] = 0;
   }
+
+  void ones() {
+    for (int i = 0; i < data.length; i++)
+      data[i] = ~0;
+  }
   
   void copy(Bitplane src, int x, int y) {
     for (int j = 0; j < src.height; j++) {
@@ -60,15 +65,32 @@ class Bitplane {
       }
     }
   }
+
+  void and(Bitplane src) {
+    for (int i = 0; i < data.length; i++)
+      data[i] &= src.data[i];
+  }
+
+  void and(Bitplane src, int x, int y) {
+    for (int j = 0; j < src.height; j++)
+      for (int i = 0; i < src.width; i++)
+        set(x + i, y + j, get(x + i, y + j) & src.get(i, j)); 
+  }
+
+  void or(Bitplane src) {
+    for (int i = 0; i < data.length; i++)
+      data[i] |= src.data[i];
+  }
   
   void or(Bitplane src, int x, int y) {
-    for (int j = 0; j < src.height; j++) {
-      for (int i = 0; i < src.width; i++) {
-        boolean a = get(x + i, y + j);
-        boolean b = src.get(i, j);
-        set(x + i, y + j, a | b);
-      }
-    }
+    for (int j = 0; j < src.height; j++)
+      for (int i = 0; i < src.width; i++)
+        set(x + i, y + j, get(x + i, y + j) | src.get(i, j));
+  }
+
+  void not() {
+    for (int i = 0; i < data.length; i++)
+      data[i] = ~data[i];
   }
 
   void add(Bitplane src, int x, int y, Bitplane carry) {
@@ -84,19 +106,68 @@ class Bitplane {
     }
   }
 
-  void addx(Bitplane src1, Bitplane src2, int x, int y, Bitplane carry) {
-    for (int j = 0; j < src1.height; j++) {
-      for (int i = 0; i < src1.width; i++) {
+  void addx(Bitplane src, Bitplane carry_in, int x, int y, Bitplane carry_out) {
+    for (int j = 0; j < src.height; j++) {
+      for (int i = 0; i < src.width; i++) {
         boolean a = get(x + i, y + j);
-        boolean b = src1.get(i, j);
-        boolean c = src2.get(i, j);
+        boolean b = src.get(i, j);
+        boolean c = carry_in.get(i, j);
         boolean d1 = (!a & !b & c) | (!a & b & !c) | (a & !b & !c) | (a & b & c);
         boolean d2 = (!a & b & c) | (a & !b & c) | (a & b & !c) | (a & b & c);
         set(x + i, y + j, d1);
-        carry.set(i, j, d2);
+        carry_out.set(i, j, d2);
       }
     }
   }
+
+  void sub(Bitplane src, Bitplane borrow) {
+    for (int i = 0; i < data.length; i++) {
+      int a = data[i];
+      int b = src.data[i];
+      data[i] = (a & ~b) | (~a & b);
+      borrow.data[i] = ~a & b;
+    }
+  }
+  
+  void sub(Bitplane src, int x, int y, Bitplane borrow) {
+    for (int j = 0; j < src.height; j++) {
+      for (int i = 0; i < src.width; i++) {
+        boolean a = get(x + i, y + j);
+        boolean b = src.get(i, j);
+        boolean d1 = (a & !b) | (!a & b);
+        boolean d2 = !a & b;
+        set(x + i, y + j, d1);
+        borrow.set(i, j, d2);
+      }
+    }
+  }
+
+  void subx(Bitplane src, Bitplane borrow_in, int x, int y, Bitplane borrow_out) {
+    for (int j = 0; j < src.height; j++) {
+      for (int i = 0; i < src.width; i++) {
+        boolean a = get(x + i, y + j);
+        boolean b = src.get(i, j);
+        boolean c = borrow_in.get(i, j);
+        boolean d1 = (!a & !b & c) | (!a & b & !c) | (a & !b & !c) | (a & b & c);
+        boolean d2 = (!a & !b & c) | (!a & b & !c) | (a & b & c);
+        set(x + i, y + j, d1);
+        borrow_out.set(i, j, d2);
+      }
+    }
+  }
+
+  void rshift(int n) {
+    assert n < 16;
+    
+    for (int j = 0; j < height; j++) {
+      int i = width - 1;
+      for (; i >= n; i--)
+        set(i, j, get(i - n, j));
+      for (; i >= 0; i--)
+        bclr(i, j);
+    }
+  }
+  
   void fill() {
     for (int y = 0; y < height; y++) {
       boolean p = false;
