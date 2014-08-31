@@ -52,6 +52,27 @@ class Bitplane {
     for (int i = 0; i < data.length; i++)
       data[i] = 0;
   }
+  
+  void copy(Bitplane src, int x, int y) {
+    for (int j = 0; j < src.height; j++) {
+      for (int i = 0; i < src.width; i++) {
+        set(x + i, y + j, src.get(i, j));
+      }
+    }
+  }
+
+  void add(Bitplane src, int x, int y, Bitplane carry) {
+    for (int j = 0; j < src.height; j++) {
+      for (int i = 0; i < src.width; i++) {
+        boolean a = get(x + i, y + j);
+        boolean b = src.get(i, j);
+        boolean c = a & b;
+        boolean r = a ^ b;
+        set(x + i, y + j, r);
+        carry.set(i, j, c);
+      }
+    }
+  }
 
   void fill() {
     for (int y = 0; y < height; y++) {
