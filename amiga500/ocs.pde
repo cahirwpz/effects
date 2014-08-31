@@ -569,10 +569,22 @@ void updateOCS() {
           continue;
         if (x < _spr[j].x || x >= _spr[j].x + 16)
           continue;
-        int w = _spr[j].get(x - spr[j].x, 0);
-        
-        if (w > 0)
-          v = w + (j & ~1) * 2 + 16;
+
+        if (_spr[j].attached) {
+          sprmask &= ~(1 << (j - 1));
+          
+          int w0 = _spr[j].get(x - spr[j].x, 0);
+          int w1 = _spr[j - 1].get(x - spr[j - 1].x, 0);
+          int w = (w0 << 2) | w1;
+
+          if (w > 0)
+            v = w + 16;
+        } else {
+          int w = _spr[j].get(x - spr[j].x, 0);
+          
+          if (w > 0)
+            v = w + (j & ~1) * 2 + 16;
+        }
       }
 
       pixels[i] = _palette[v];
@@ -581,4 +593,3 @@ void updateOCS() {
 
   updatePixels();
 }
-
