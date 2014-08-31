@@ -48,7 +48,7 @@ class Bitplane {
     data[pos(x, y)] ^= bit(x);
   }
 
-  void clear() {
+  void zeros() {
     for (int i = 0; i < data.length; i++)
       data[i] = 0;
   }

@@ -51,11 +51,11 @@ void setup() {
     int near_y = height;
     
     if (near_x < 0) {
-      near_y = far_y + (height - far_y) * (0 - far_x) / (near_x - far_x);
+      near_y = far_y + (0 - far_x) * (height - far_y) / (near_x - far_x);
       near_x = 0;
     }
     if (near_x >= width) {
-      near_y = far_y + (height - far_y) * (width - far_x - 1) / (near_x - far_x);
+      near_y = far_y +  (width - 1 - far_x) * (height - far_y) / (near_x - far_x);
       near_x = width - 1;
     }
     
@@ -96,7 +96,7 @@ void copperLine(int x1, int y1, int x2, int y2, int i) {
     copper(xi & ~7, y1, i % 2, cmap.get(i, hmap[y1]));
     xi += di;
     xf += df;
-    if (xf > dy) {
+    if (xf >= dy) {
       xf -= dy;
       xi += s;
     }
@@ -113,7 +113,7 @@ void draw() {
     copper(0, i, 0, lerpColor(#0080ff, #80ffff, float(i) / far_y));
   copper(0, far_y, 0, 0);
 
-  bpl[0].clear();
+  bpl[0].zeros();
 
   int yo = int((1.0 + cos(t)) * M / 4);
   int xo = int((1.0 + sin(t)) * N / 4);

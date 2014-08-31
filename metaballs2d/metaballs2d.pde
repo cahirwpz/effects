@@ -60,7 +60,7 @@ void draw() {
   int yo1 = (height - SIZE) / 2 + int(sin(t + PI / 2) * SIZE);
  
   for (Bitplane b : bpl)
-    b.clear(); 
+    b.zeros(); 
   
   addMetaball(xo1, (height - SIZE) / 2);
   addMetaball(xo2, (height - SIZE) / 2);
