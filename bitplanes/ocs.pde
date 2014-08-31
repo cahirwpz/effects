@@ -9,50 +9,50 @@ class Bitplane {
   int height;
   // each word stores only 16 bits
   int data[];  
-  
+
   Bitplane(int _width, int _height) {
     assert _width % 16 == 0; // must be multiple of 16
-    
+
     width = _width;
     height = _height;
-    
+
     data = new int[width * height / 16];
   }
-  
+
   int bit(int x) {
     return 1 << (x & 15);
   }
-  
+
   int pos(int x, int y) {
     return ((y * width) >> 4) + (x >> 4);
   }
-  
+
   boolean get(int x, int y) {
     return boolean(data[pos(x, y)] & bit(x));
   }
-  
+
   void set(int x, int y, boolean value) {
     if (value) bset(x, y);
     else bclr(x, y);
   }
-  
+
   void bset(int x, int y) {
     data[pos(x, y)] |= bit(x);
   }
 
   void bclr(int x, int y) {
-    data[pos(x, y)] &= ~bit(x); 
+    data[pos(x, y)] &= ~bit(x);
   }
-  
+
   void bxor(int x, int y) {
-    data[pos(x, y)] ^= bit(x); 
+    data[pos(x, y)] ^= bit(x);
   }
-  
+
   void clear() {
     for (int i = 0; i < data.length; i++)
       data[i] = 0;
   }
-  
+
   void fill() {
     for (int y = 0; y < height; y++) {
       boolean p = false;
@@ -61,27 +61,27 @@ class Bitplane {
         p ^= q;
         set(x, y, p);
       }
-    }    
+    }
   }
-  
+
   void line(int xs, int ys, int xe, int ye) {
     if (ys > ye) {
       int xt = xs; xs = xe; xe = xt;
       int yt = ys; ys = ye; ye = yt;
     }
-    
+
     int s = (xs < xe) ? 1 : -1;
     int dx = abs(xe - xs);
     int dy = ye - ys;
     int dg1 = 2 * dx;
     int dg2 = 2 * dy;
-    
+
     if (dx < dy) {
       int dg = 2 * dx - dy;
-  
+
       do {
         bset(xs, ys);
-  
+
         if (dg > 0) {
           xs += s;
           dg += dg1 - dg2;
@@ -95,7 +95,7 @@ class Bitplane {
 
       do {
         bset(xs, ys);
-        
+
         if (dg > 0) {
           ys++;
           dg += dg2 - dg1;
@@ -106,19 +106,19 @@ class Bitplane {
       } while (--dx > 0);
     }
   }
-    
+
   void lineE(int x1, int y1, int x2, int y2) {
     if (y1 > y2) {
       int xt = x1; x1 = x2; x2 = xt;
-      int yt = y1; y1 = y2; y2 = yt;    
+      int yt = y1; y1 = y2; y2 = yt;
     }
-    
+
     int dx = x2 - x1;
     int dy = y2 - y1;
-    
+
     if (dy == 0)
       return;
-      
+
     int di = dx / dy;
     int df = abs(dx) % dy;
     int xi = x1;
@@ -135,25 +135,25 @@ class Bitplane {
       }
     }
   }
-  
+
   void circle(int x0, int y0, int r) {
     int x = -r;
     int y = 0;
     int err = 2 * (1 - r);
-    
+
     do {
       bxor(x0 - x, y0 + y);
       bxor(x0 - y, y0 - x);
       bxor(x0 + x, y0 - y);
       bxor(x0 + y, y0 + x);
-      
+
       if (err <= y) {
         y++;
         err += y * 2 + 1;
       }
       if (err > x) {
         x++;
-        err += x * 2 + 1; 
+        err += x * 2 + 1;
       }
     } while (x < 0);
   }
@@ -162,7 +162,7 @@ class Bitplane {
     int x = -r;
     int y = 0;
     int err = 2 * (1 - r);
-    
+
     do {
       if (err <= y) {
         bxor(x0 - x, y0 - y);
@@ -176,9 +176,143 @@ class Bitplane {
       }
       if (err > x) {
         x++;
-        err += 2 * x + 1; 
+        err += 2 * x + 1;
       }
     } while (x < 0);
+  }
+
+  /* Generating Conic Sections Using an Efficient Algorithms
+   * by Abdul-Aziz Solyman Khalil */
+  void ellipse(int xc, int yc, int rx, int ry) {
+    int rx2, ry2, tworx2, twory2, x_slop, y_slop;
+    int d, mida, midb;
+    int x, y;
+
+    x = 0; 
+    y = ry;
+    rx2 = rx * rx; 
+    ry2 = ry * ry;
+    tworx2 = 2 * rx2; 
+    twory2 = 2 * ry2;
+    x_slop = 2 * twory2; 
+    y_slop = 2 * tworx2 * (y - 1);
+    mida = rx2 / 2;
+    midb = ry2 / 2;
+    d = twory2 - rx2 - y_slop / 2 - mida;
+
+    while (d <= y_slop) {
+      bset(xc + x, yc + y);
+      bset(xc - x, yc + y);
+      bset(xc + x, yc - y);
+      bset(xc - x, yc - y);
+      if (d > 0) {
+        d -= y_slop;
+        y--;
+        y_slop -= 2 * tworx2;
+      }
+      d += twory2 + x_slop;
+      x++;
+      x_slop += 2 * twory2;
+    }
+
+    d -= (x_slop + y_slop) / 2 + (ry2 - rx2) + (mida - midb);
+
+    while (y >= 0) {
+      bset(xc + x, yc + y);
+      bset(xc - x, yc + y);
+      bset(xc + x, yc - y);
+      bset(xc - x, yc - y);
+
+      if (d <= 0) {
+        d += x_slop;
+        x++;
+        x_slop += 2 * twory2;
+      }
+      d += tworx2 - y_slop;
+      y--;
+      y_slop -= 2 * tworx2;
+    }
+  }
+
+  void hyperbola(int xc, int yc, int rx, int ry, int bound) {
+    int x, y, d, mida, midb;
+    int tworx2, twory2, rx2, ry2;
+    int x_slop, y_slop;
+
+    x = rx; 
+    y = 0;
+    rx2 = rx * rx; 
+    ry2 = ry * ry;
+    tworx2 = 2 * rx2; 
+    twory2 = 2 * ry2;
+    x_slop = 2 * twory2 * ( x + 1 );
+    y_slop = 2 * tworx2;
+    mida = x_slop / 2; 
+    midb = y_slop / 2;
+    d = tworx2 - ry2 * (1 + 2 * rx) + midb;
+
+    while ((d < x_slop) && (y <= bound)) {
+      bset(xc + x, yc + y);
+      bset(xc + x, yc - y);
+      bset(xc - x, yc + y);
+      bset(xc - x, yc - y);
+      if (d >= 0) {
+        d -= x_slop;
+        x++;
+        x_slop += 2 * tworx2;
+      }
+      d += tworx2 + y_slop;
+      y++;
+      y_slop += 2 * tworx2;
+    }
+
+    d -= (x_slop + y_slop) / 2 + (rx2 + ry2) - (mida + midb);
+
+    if (rx > ry) {
+      while (y <= bound) {
+        bset(xc + x, yc + y);
+        if (d <= 0) {
+          d += y_slop;
+          y++;
+          y += 2 * tworx2;
+        }
+        d -= twory2 - x_slop;
+        x++;
+        x_slop += 2 * twory2;
+      }
+    }
+  }
+
+  void parabola(int x0, int y0, int p, int bound) {
+    int p2 = 2 * p;
+    int p4 = 2 * p2;
+    int x = 0;
+    int y = 0;
+    int d = 1 - p;
+
+    while ( (y < p) && (x <= bound)) {
+      bset(x0 + x, y0 - y);
+      bset(x0 + x, y0 + y);
+      if (d >= 0) {
+        x++;
+        d -= p2;
+      }
+      y++;
+      d += 2 * y + 1;
+    }
+
+    d = 1 - (d == 1 ? p4 : p2);
+
+    while (x <= bound) {
+      bset(x0 + x, y0 - y);
+      bset(x0 + x, y0 + y);
+      if (d <= 0) {
+        y++;
+        d += 4 * y;
+      }
+      x++;
+      d -= p4;
+    }
   }
 };
 
@@ -186,11 +320,11 @@ class Bitplane {
 class CopIns {
   int n;
   color c;
-  
+
   CopIns(int _n, color _c) {
     n = _n;
     c = _c;
-  } 
+  }
 };
 
 // Limits color space to OCS 12-bit RGB.
@@ -216,7 +350,7 @@ void initOCS(int _depth) {
   depth = _depth;
   bpl = new Bitplane[depth];
   for (int i = 0; i < depth; i++)
-      bpl[i] = new Bitplane(width, height);
+    bpl[i] = new Bitplane(width, height);
   palette = new color[32];
   copperList = new CopIns[(width / 8) * height];
 }
@@ -228,16 +362,18 @@ void copperClear() {
 
 void copper(int x, int y, int n, int c) {
   assert (x & 7) == 0;
+  assert x >= 0 && x < width;
+  assert y >= 0 && y < height;
   copperList[(x / 8) + (y * width / 8)] = new CopIns(n & 0x1f, c);
 }
-  
+
 void updateOCS() {
   // Copy colors to working palette that will change while
   // rendering view port.
   color _palette[] = new color[32];
   for (int i = 0; i < 32; i++)
     _palette[i] = rgb12(palette[i]);
-  
+
   for (int y = 0, s = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
       if ((x & 7) == 0) {
@@ -246,15 +382,16 @@ void updateOCS() {
           _palette[slot.n] = rgb12(slot.c);
         s++;
       }
-      
+
       int i = 0;
-      
+
       for (int d = 0; d < depth; d++)
         i |= int(bpl[d].get(x, y)) << d;
-        
+
       set(x, y, _palette[i]);
     }
   }
-  
+
   updatePixels();
 }
+
