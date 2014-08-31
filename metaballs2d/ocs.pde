@@ -1,1 +1,1 @@
-../bitplanes/ocs.pde
+../amiga500/ocs.pde
