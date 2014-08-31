@@ -60,20 +60,43 @@ class Bitplane {
       }
     }
   }
+  
+  void or(Bitplane src, int x, int y) {
+    for (int j = 0; j < src.height; j++) {
+      for (int i = 0; i < src.width; i++) {
+        boolean a = get(x + i, y + j);
+        boolean b = src.get(i, j);
+        set(x + i, y + j, a | b);
+      }
+    }
+  }
 
   void add(Bitplane src, int x, int y, Bitplane carry) {
     for (int j = 0; j < src.height; j++) {
       for (int i = 0; i < src.width; i++) {
         boolean a = get(x + i, y + j);
         boolean b = src.get(i, j);
-        boolean c = a & b;
-        boolean r = a ^ b;
-        set(x + i, y + j, r);
-        carry.set(i, j, c);
+        boolean d1 = (a & !b) | (!a & b);
+        boolean d2 = a & b;
+        set(x + i, y + j, d1);
+        carry.set(i, j, d2);
       }
     }
   }
 
+  void addx(Bitplane src1, Bitplane src2, int x, int y, Bitplane carry) {
+    for (int j = 0; j < src1.height; j++) {
+      for (int i = 0; i < src1.width; i++) {
+        boolean a = get(x + i, y + j);
+        boolean b = src1.get(i, j);
+        boolean c = src2.get(i, j);
+        boolean d1 = (!a & !b & c) | (!a & b & !c) | (a & !b & !c) | (a & b & c);
+        boolean d2 = (!a & b & c) | (a & !b & c) | (a & b & !c) | (a & b & c);
+        set(x + i, y + j, d1);
+        carry.set(i, j, d2);
+      }
+    }
+  }
   void fill() {
     for (int y = 0; y < height; y++) {
       boolean p = false;
