@@ -19,11 +19,11 @@ class Bitplane {
     data = new int[width * height / 16];
   }
 
-  int bit(int x) {
+  private int bit(int x) {
     return 1 << (x & 15);
   }
 
-  int pos(int x, int y) {
+  private int pos(int x, int y) {
     return ((y * width) >> 4) + (x >> 4);
   }
 
@@ -483,14 +483,16 @@ void copper(int x, int y, int n, int c) {
 }
 
 void updateOCS() {
+  loadPixels();
+  
   // Copy colors to working palette that will change while
   // rendering view port.
   color _palette[] = new color[32];
   for (int i = 0; i < 32; i++)
     _palette[i] = rgb12(palette[i]);
 
-  for (int y = 0, s = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
+  for (int y = 0, s = 0, i = 0; y < height; y++) {
+    for (int x = 0; x < width; x++, i++) {
       if ((x & 7) == 0) {
         CopIns slot = copperList[s];
         if (slot != null)
@@ -498,12 +500,15 @@ void updateOCS() {
         s++;
       }
 
-      int i = 0;
+      int bit = i & 15;
+      int word = i >> 4;      
+      int v = 0;
+      int d = depth;
 
-      for (int d = 0; d < depth; d++)
-        i |= int(bpl[d].get(x, y)) << d;
+      while (--d >= 0)
+        v = (v << 1) | ((bpl[d].data[word] >> bit) & 1);
 
-      set(x, y, _palette[i]);
+      pixels[i] = _palette[v];
     }
   }
 

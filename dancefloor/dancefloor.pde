@@ -27,7 +27,7 @@ PImage cmap;
 int hmap[];
 
 void setup() {
-  frameRate(25);
+  frameRate(60);
   size(640, 480);  
 
   cmap = new PImage(ROWS + 8, COLS + 8, RGB);
@@ -105,7 +105,7 @@ void copperLine(int x1, int y1, int x2, int y2, int i) {
 }
 
 void draw() {
-  float t = frameCount / 25.0;
+  float t = frameCount / 60.0;
 
   copperClear();
   
@@ -164,4 +164,6 @@ void draw() {
   }
  
   updateOCS();
+  
+  println(frameRate);
 }

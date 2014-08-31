@@ -67,4 +67,6 @@ void draw() {
   addMetaball((width - SIZE) / 2, yo1);
   
   updateOCS();
+  
+  println(frameRate);
 }
