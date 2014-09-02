@@ -66,6 +66,14 @@ class Bitplane {
     }
   }
 
+  void copy(Bitplane src, int sx, int sy, int sw, int sh, int dx, int dy) {
+    for (int j = 0; j < sh; j++) {
+      for (int i = 0; i < sw; i++) {
+        set(i + dx, j + dy, src.get(i + sx, j + sy));
+      }
+    }
+  }
+
   void and(Bitplane src) {
     for (int i = 0; i < data.length; i++)
       data[i] &= src.data[i];
@@ -86,6 +94,17 @@ class Bitplane {
     for (int j = 0; j < src.height; j++)
       for (int i = 0; i < src.width; i++)
         set(x + i, y + j, get(x + i, y + j) | src.get(i, j));
+  }
+
+  void or_mask(Bitplane src, Bitplane mask, int x, int y) {
+    for (int j = 0; j < src.height; j++)
+      for (int i = 0; i < src.width; i++) {
+        boolean a = get(x + i, y + j);
+        boolean b = src.get(i, j);
+        boolean c = mask.get(i, j);
+        boolean d = (a & !c) | (b & c);
+        set(x + i, y + j, d);
+      }
   }
 
   void not() {
