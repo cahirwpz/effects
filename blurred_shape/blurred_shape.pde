@@ -16,8 +16,13 @@ void setup() {
   carry[0] = new Bitplane(BOB_SIZE, BOB_SIZE);
   carry[1] = new Bitplane(BOB_SIZE, BOB_SIZE);
   
-  for (int i = 0; i < 32; i++)
-    palette[i] = lerpColor(#000000, #ffffff, float(i) / 31);
+  for (int i = 0; i < 16; i++)
+    palette[i] = lerpColor(#000000, #ff0080, float(i) / 15);
+  for (int i = 0; i < 16; i++)
+    palette[i + 16] = lerpColor(#000000, #0080ff, float(i) / 15);
+  
+  bpl[4].circleE(width / 2, height / 2, BOB_SIZE / 4 - 1);
+  bpl[4].fill();
 }
 
 void rotatingTriangle(float t, float phi, float size) {
@@ -44,9 +49,9 @@ void draw() {
 
   /* Create a bob with two rotating triangle xor'ed. */
   bob.zeros();
-  rotatingTriangle(t, 0.0, BOB_SIZE);
-  rotatingTriangle(t, PI / 3, BOB_SIZE);
-  rotatingTriangle(-t, PI / 3, BOB_SIZE / 2);
+  rotatingTriangle(t * 0.5, 0.0, BOB_SIZE);
+  rotatingTriangle(t * 0.5, PI / 3, BOB_SIZE);
+  rotatingTriangle(-t * 0.5, PI / 3, BOB_SIZE / 2);
   bob.fill();
 
   int xo = (width - bob.width) / 2;
@@ -63,11 +68,10 @@ void draw() {
       bpl[1].sub(carry[1], xo, yo, carry[0]);
       bpl[2].sub(carry[0], xo, yo, carry[1]);
       bpl[3].sub(carry[1], xo, yo, carry[0]);
-      bpl[4].sub(carry[0], xo, yo, carry[1]);
       
-      carry[1].not();
-      for (Bitplane b: bpl)
-        b.and(carry[1], xo, yo);
+      carry[0].not();
+      for (int i = 0; i < 4; i++)
+        bpl[i].and(carry[0], xo, yo);
     }
   
     /* Add with saturation. */
@@ -75,9 +79,9 @@ void draw() {
     bpl[1].add(carry[0], xo, yo, carry[1]);
     bpl[2].add(carry[1], xo, yo, carry[0]);
     bpl[3].add(carry[0], xo, yo, carry[1]);
-    bpl[4].add(carry[1], xo, yo, carry[0]);
-    for (int i = 0; i < 5; i++)
-      bpl[i].or(carry[0], xo, yo);
+
+    for (int i = 0; i < 4; i++)
+      bpl[i].or(carry[1], xo, yo);
   }
 
   updateOCS();
