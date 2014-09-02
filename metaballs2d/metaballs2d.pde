@@ -33,12 +33,12 @@ void setup() {
 
   initOCS(5);
 
-    for (int i = 0; i < 16; i++)
-      palette[i + 8] = lerpColor(color(0, 0, 0), color(255, 255, 255), float(i + 1) / 16);
-    for (int i = 0; i < 4; i++)
-      palette[i + 24] = #ffffff;
-    for (int i = 0; i < 4; i++)
-      palette[i + 28] = lerpColor(color(255, 255, 255), color(0, 0, 0), float(i + 1) / 4);
+  for (int i = 0; i < 16; i++)
+    palette[i + 8] = lerpColor(color(0, 0, 0), color(255, 255, 255), float(i + 1) / 16);
+  for (int i = 0; i < 4; i++)
+    palette[i + 24] = #ffffff;
+  for (int i = 0; i < 4; i++)
+    palette[i + 28] = lerpColor(color(255, 255, 255), color(0, 0, 0), float(i + 1) / 4);
 }
 
 void addMetaball(int x, int y) {
