@@ -45,6 +45,8 @@ class Bitplane {
   }
 
   void bxor(int x, int y) {
+    if (x < 0 || x >= width) return;
+    if (y < 0 || y >= height) return;
     data[pos(x, y)] ^= bit(x);
   }
 
@@ -183,6 +185,18 @@ class Bitplane {
       for (; i >= n; i--)
         set(i, j, get(i - n, j));
       for (; i >= 0; i--)
+        bclr(i, j);
+    }
+  }
+
+  void lshift(int n) {
+    assert n < 16;
+    
+    for (int j = 0; j < height; j++) {
+      int i = 0;
+      for (; i < width - n; i++)
+        set(i, j, get(i + n, j));
+      for (; i < width; i++)
         bclr(i, j);
     }
   }
