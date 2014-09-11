@@ -114,28 +114,28 @@ class Bitplane {
       data[i] = ~data[i];
   }
 
-  void add(Bitplane src, int x, int y, Bitplane carry) {
+  void add(Bitplane src, int dx, int dy, Bitplane carry) {
     for (int j = 0; j < src.height; j++) {
       for (int i = 0; i < src.width; i++) {
-        boolean a = get(x + i, y + j);
+        boolean a = get(dx + i, dy + j);
         boolean b = src.get(i, j);
         boolean d1 = (a & !b) | (!a & b);
         boolean d2 = a & b;
-        set(x + i, y + j, d1);
+        set(dx + i, dy + j, d1);
         carry.set(i, j, d2);
       }
     }
   }
 
-  void addx(Bitplane src, Bitplane carry_in, int x, int y, Bitplane carry_out) {
+  void addx(Bitplane src, Bitplane carry_in, int dx, int dy, Bitplane carry_out) {
     for (int j = 0; j < src.height; j++) {
       for (int i = 0; i < src.width; i++) {
-        boolean a = get(x + i, y + j);
+        boolean a = get(dx + i, dy + j);
         boolean b = src.get(i, j);
         boolean c = carry_in.get(i, j);
         boolean d1 = (!a & !b & c) | (!a & b & !c) | (a & !b & !c) | (a & b & c);
         boolean d2 = (!a & b & c) | (a & !b & c) | (a & b & !c) | (a & b & c);
-        set(x + i, y + j, d1);
+        set(dx + i, dy + j, d1);
         carry_out.set(i, j, d2);
       }
     }

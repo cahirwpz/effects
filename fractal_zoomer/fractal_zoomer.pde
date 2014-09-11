@@ -27,7 +27,7 @@ void setup() {
   background(0);
 }
 
-void draw() {
+void draw() {  
   /* XXX work out how to compensate for the bias.
    * the bias is really a function of where the stationary center
    * of the image is combined with the average properties of the
@@ -54,15 +54,14 @@ void draw() {
   /* now move graphics around. */
   PImage buffer = get();
 
-  for (int y = 0; y < 17; y++) {
-    for (int x = 0; x < 17; x++) {
-      PImage tile = buffer.get(
-           x * pieceSize + shift + (16 - y) * rotation + x * zoom,
-           y * pieceSize + shift + x * rotation - (16 - y) * zoom,
-           pieceSize, pieceSize);
-      image(tile,
-            x * pieceSize + shift + 8 * rotation + 8 * zoom,
-            y * pieceSize + shift + 8 * rotation - 8 * zoom);
+  for (int y = 0; y <= 16; y++) {
+    for (int x = 0; x <= 16; x++) {
+      int sx = x * pieceSize + shift + (16 - y) * rotation + x * zoom;
+      int sy = y * pieceSize + shift + x * rotation - (16 - y) * zoom;
+      int dx = x * pieceSize + shift + 8 * rotation + 8 * zoom;
+      int dy = y * pieceSize + shift + 8 * rotation - 8 * zoom;
+            
+      image(buffer.get(sx, sy, pieceSize, pieceSize), dx, dy);
     }
   }
 }

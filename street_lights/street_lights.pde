@@ -1,5 +1,5 @@
+final int LANE_W = 320 + 48;
 final int LANE_H = 40;
-final int LANE_W = 320 + 64;
 final int CARS = 40;
 
 Bitplane flare[];
@@ -8,7 +8,6 @@ Bitplane carry[];
 Bitplane laneR[];
 Bitplane laneL[];
 Car cars[];
-
 
 class Car {
   float speed;
@@ -22,7 +21,7 @@ class Car {
 
   void init() {
     speed = random(0.8, 1.6) * ((random(0, 1) < 0.5) ? -1 : 1);
-    x = 16;
+    x = 0;
     y = int(random(0, 4)) * 8;
     active = true;
   }
@@ -143,7 +142,7 @@ void draw() {
     
     bpl[i].copy(laneL[i], 32, 0, width, LANE_H,
                 0, height / 2 - LANE_H - 16);
-    bpl[i].copy(laneR[i], 32, 0, width, LANE_H,
+    bpl[i].copy(laneR[i], 16, 0, width, LANE_H,
                 0, height / 2 + 16);
   }
 
