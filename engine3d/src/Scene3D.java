@@ -1,4 +1,3 @@
-import processing.core.*;
 import java.util.*;
 
 public class Scene3D {

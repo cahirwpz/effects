@@ -1,5 +1,3 @@
-import java.lang.*;
-
 public class Vector3D {
   public float x, y, z;
 

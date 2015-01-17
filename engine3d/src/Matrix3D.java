@@ -1,5 +1,3 @@
-import java.lang.*;
-
 public class Matrix3D {
   float[][] mx; /* [row][col] */
   
