@@ -4,6 +4,7 @@ import java.util.*;
 public class Polygon {
   Vector3D[] point;
   Vector3D normal;
+  int color;
 
   static final int PF_LEFT   = 1;
   static final int PF_RIGHT  = 2;
@@ -14,6 +15,7 @@ public class Polygon {
   
   Polygon(int points) {
     this.point = new Vector3D[points];
+    this.color = 0xffffff;
   }
   
   int size() { return point.length; }

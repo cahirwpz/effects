@@ -13,7 +13,9 @@ public class Scene3D {
   }
 
   void add(Mesh3D mesh, Matrix3D toWorld) {
-    meshes.add(new Mesh3D(toWorld.transform(mesh.vertex), mesh.face));
+    Mesh3D m = mesh.copy();
+    m.vertex = toWorld.transform(mesh.vertex);
+    meshes.add(m);
   }
 
   private int[] clipFlags(Vector3D vertex[]) {
@@ -43,7 +45,7 @@ public class Scene3D {
     int[] flags = clipFlags(mesh.vertex);
     ArrayList<Polygon> polygons = new ArrayList<Polygon>();
 
-    for (Face f : mesh.face) {
+    for (MeshPolygon f : mesh.face) {
       Vector3D v0 = mesh.vertex[f.vertex[0]];
       Vector3D v1 = mesh.vertex[f.vertex[1]];
       Vector3D v2 = mesh.vertex[f.vertex[2]];
@@ -68,10 +70,12 @@ public class Scene3D {
           p.point[i] = mesh.vertex[f.vertex[i]];
         p.point[i] = p.point[0];
         
-        p.normal = normal;
+        if (p.clip(clip)) {
+          p.normal = Vector3D.normalize(normal, 1.0f);
+          p.color = mesh.surface[f.surfaceIndex].color;
 
-        if (p.clip(clip))
           polygons.add(p);
+        }
       }
     }
 
@@ -87,13 +91,11 @@ public class Scene3D {
         
         if (p.length < 3)
           continue;
-
-        Vector3D normal = Vector3D.normalize(polygon.normal, 255.0f);
-
-        int col = ((int)normal.z << 16) | ((int)normal.z << 8) | (int)normal.z;
+          
+        int color = r.lerpColor(0, polygon.color, polygon.normal.z);
 
         for (int i = 2; i < p.length; i++)
-          r.triangle(p[0], p[i-1], p[i], col);
+          r.triangle(p[0], p[i-1], p[i], color);
       }
     }
 

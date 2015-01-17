@@ -19,6 +19,18 @@ public class Rasterizer {
     return newpoint;
   }
   
+  static int color(int r, int g, int b) {
+    return (r << 16) | (g << 8) | b;
+  }
+  
+  static int color(float r, float b, float g) {
+    return ((int)(r * 255.0f) << 16) | ((int)(g * 255.0f) << 8) | ((int)(b * 255.0f));
+  }
+  
+  int lerpColor(int c1, int c2, float f) {
+    return parent.lerpColor(c1, c2, f);
+  }
+  
   void line(float x1f, float y1f, float x2f, float y2f, int col) {
     if (y2f < y1f) {
       float xf = x1f; x1f = x2f; x2f = xf;

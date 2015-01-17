@@ -22,7 +22,7 @@ void draw() {
   loadPixels();
     
   m1.reset();
-  m1.scale(0.25, 0.25, 1);
+  //m1.scale(0.25, 0.25, 1);
   m1.rotate(ax, ax, ax);
   m1.translate(0, 0, -8);
   m1.perspective(45, 4.0f/3.0f, 2.0, 100.0);
