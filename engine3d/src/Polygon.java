@@ -1,9 +1,10 @@
 import java.util.*;
 
-public class Polygon {
+public class Polygon implements Comparable<Polygon> {
   Vector3D[] point;
   Vector3D normal;
   int color;
+  float depth;
 
   static final int PF_LEFT   = 1;
   static final int PF_RIGHT  = 2;
@@ -30,6 +31,13 @@ public class Polygon {
     Vector3D v = Vector3D.sub(point[1], point[2]);
     
     normal = Vector3D.normalize(Vector3D.cross(u, v), 1.0f);
+  }
+  
+  void refreshDepth() {
+    depth = 0.0f;
+    for (Vector3D pt : point)
+      depth += pt.z;
+    depth /= size();
   }
   
   public String toString() {
@@ -147,5 +155,14 @@ public class Polygon {
         return false;
 
     return true;
+  }
+
+  @Override
+  public int compareTo(Polygon p) {
+    if (depth > p.depth)
+      return -1;
+    if (depth < p.depth)
+      return 1;
+    return 0;
   }
 };

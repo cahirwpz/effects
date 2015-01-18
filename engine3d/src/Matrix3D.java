@@ -67,9 +67,9 @@ public class Matrix3D {
     return d;
   }
   
-  static Matrix3D loadFrustum(float left, float right,
-                              float top, float bottom,
-                              float near, float far)
+  static Matrix3D frustum(float left, float right,
+                          float top, float bottom,
+                          float near, float far)
   {
     Matrix3D d = new Matrix3D();
     
@@ -87,14 +87,14 @@ public class Matrix3D {
     return d;
   }
   
-  static Matrix3D loadPerspective(float fovy, float aspect, float near, float far) {
+  static Matrix3D perspective(float fovy, float aspect, float near, float far) {
     float fH = (float)Math.tan(Math.toRadians(fovy / 2)) * near;
     float fW = fH * aspect;
 
-    return loadFrustum(-fW, fW, -fH, fH, near, far);
+    return frustum(-fW, fW, -fH, fH, near, far);
   }
 
-  static Matrix3D loadCamera(Vector3D direction, Vector3D position) {
+  static Matrix3D cameraFromVectors(Vector3D direction, Vector3D position) {
     Vector3D d, u, r;
 
     // unit vector pointing to focal point
@@ -126,7 +126,7 @@ public class Matrix3D {
     return camera;
   }
 
-  static Matrix3D loadCameraFromAngles(
+  static Matrix3D cameraFromAngles(
       float azimuth, float elevation, Vector3D position)
   {
     Vector3D direction = new Vector3D(
@@ -134,7 +134,7 @@ public class Matrix3D {
         (float) (Math.sin(elevation) * Math.sin(azimuth)),
         (float) (Math.cos(elevation)));
 
-    return loadCamera(direction, position);
+    return cameraFromVectors(direction, position);
   }
   
   static Matrix3D mult(Matrix3D a, Matrix3D b) {
