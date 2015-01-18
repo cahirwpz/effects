@@ -17,15 +17,28 @@ public class Polygon {
     this.color = 0xffffff;
   }
   
+  Polygon(Vector3D[] point, int color) {
+    this.point = point;
+    this.color = color;
+    refreshNormal();
+  }
+  
   int size() { return point.length; }
-
+  
+  void refreshNormal() {
+    Vector3D u = Vector3D.sub(point[1], point[0]);
+    Vector3D v = Vector3D.sub(point[1], point[2]);
+    
+    normal = Vector3D.normalize(Vector3D.cross(u, v), 1.0f);
+  }
+  
   public String toString() {
     String s = "";
     for (Vector3D v : point)
       s += v.toString();
     return String.format("(%s)", s);
   }
-
+  
   private boolean checkInside(Vector3D p, int plane) {
     if ((plane & PF_LEFT) != 0)
       return (p.x >= -1.0f);

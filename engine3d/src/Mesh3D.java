@@ -41,7 +41,7 @@ public class Mesh3D {
       
       mesh.face[i] = new MeshPolygon(p.size());
       for (int j = 0; j < p.size(); j++)
-        mesh.face[i].vertex[j] = p.getInt(j);
+        mesh.face[i].vertexIndex[j] = p.getInt(j);
     }
     
     for (int i = 0; i < ptag.size(); i++) {
@@ -70,11 +70,11 @@ public class Mesh3D {
     ArrayList<MeshPolygon> ts = new ArrayList<MeshPolygon>();
     
     for (MeshPolygon p : face) {
-      for (int i = 2; i < p.vertex.length; i++) {
+      for (int i = 2; i < p.vertexIndex.length; i++) {
         MeshPolygon t = new MeshPolygon(3);
-        t.vertex[0] = p.vertex[0];
-        t.vertex[1] = p.vertex[i - 1];
-        t.vertex[2] = p.vertex[i];
+        t.vertexIndex[0] = p.vertexIndex[0];
+        t.vertexIndex[1] = p.vertexIndex[i - 1];
+        t.vertexIndex[2] = p.vertexIndex[i];
         ts.add(t);
       }
     }
