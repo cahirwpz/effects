@@ -78,6 +78,7 @@ public class Mesh3D {
     Mesh3D mesh = new Mesh3D();
     
     ArrayList<MeshSurface> srfs = new ArrayList<>();
+    ArrayList<String> tags = new ArrayList<>();
     
     for (IffFile.Chunk chunk : iff.chunks) {
       if (chunk.isType("PNTS")) {
@@ -114,9 +115,24 @@ public class Mesh3D {
             Vector3D c = minick.getVector3D();
             c.scale(255.0f);
             surf.color = ((int)c.x << 16) | ((int)c.y << 8) | (int)c.z; 
+          } else if (minick.isType("SPEC")) {
+            surf.specular = minick.getFloat();
+          } else if (minick.isType("DIFF")) {
+            surf.diffuse = minick.getFloat();
+          } else if (minick.isType("VERS") || minick.isType("NODS")) {
+            /* skip */
+          } else {
+            System.out.println("Mini chunk not handled: " + minick.id);
           }
         }
         srfs.add(surf);
+      } else if (chunk.isType("TAGS")) {
+        while (chunk.hasRemaining())
+          tags.add(chunk.getString());
+      } else if (chunk.isType("BBOX") || chunk.isType("LAYR")) {
+        /* skip */
+      } else {
+        System.out.println("Chunk not handled: " + chunk.id);
       }
     }
     
