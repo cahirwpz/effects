@@ -8,13 +8,13 @@ public class Engine3D extends PApplet {
   
   public void setup() {
     size(640, 480);
-    noSmooth();
-    stroke(255);
+    frameRate(60);
 
-    Mesh3D mesh = Mesh3D.parse(loadJSONObject("cube.json"));
+    Mesh3D mesh = Mesh3D.readFromJSON(createReader("cube.json"));
+    Mesh3D lwo = Mesh3D.readFromLWO("obj2.lwo");
     
     obj1 = new Object3D(mesh);
-    obj2 = new Object3D(mesh);
+    obj2 = new Object3D(lwo);
     
     scene = new Scene3D();
     scene.add(obj1);
@@ -23,25 +23,28 @@ public class Engine3D extends PApplet {
     rasterizer = new Rasterizer(this);
   }
 
-  float ax = 0.0f;
-
   public void draw() {
+    float alpha = (float)frameCount * 0.5f;
+    float x = (float)Math.sin(Math.toRadians(frameCount)) * 2.0f;
+    
     background(0);
     loadPixels();
 
+    scene.cameraLookAt(new Vector3D(0, 0, 0),
+                       new Vector3D(x, 0, -8.0f),
+                       new Vector3D(0, 1, 0));
+
     obj1.reset();
-    obj1.scale(1, 1, 1);
-    obj1.rotate(ax, ax, ax);
+    obj1.rotate(alpha, alpha, alpha);
     obj1.translate(2, 0, -8);
 
     obj2.reset();
-    obj2.rotate(ax, ax, ax);
+    obj2.scale(2, 2, 2);
+    obj2.rotate(alpha, alpha, alpha);
     obj2.translate(-2, 0, -8);
 
     scene.draw(rasterizer);
 
     updatePixels();
-
-    ax += 0.5f;
   }
 };

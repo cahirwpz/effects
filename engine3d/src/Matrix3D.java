@@ -136,6 +136,30 @@ public class Matrix3D {
 
     return cameraFromVectors(direction, position);
   }
+
+  /* http://3dgep.com/understanding-the-view-matrix/#Look_At_Camera */
+  static Matrix3D cameraLookAt(Vector3D eye, Vector3D target, Vector3D up) {
+    Vector3D zaxis = Vector3D.normalize(Vector3D.sub(eye, target), 1.0f);
+    Vector3D xaxis = Vector3D.normalize(Vector3D.cross(up, zaxis), 1.0f);
+    Vector3D yaxis = Vector3D.cross(zaxis, xaxis);
+
+    Matrix3D camera = new Matrix3D();
+
+    camera.mx[0][0] = xaxis.x;
+    camera.mx[0][1] = yaxis.x;
+    camera.mx[0][2] = zaxis.x;
+    camera.mx[1][0] = xaxis.y;
+    camera.mx[1][1] = yaxis.y;
+    camera.mx[1][2] = zaxis.y;
+    camera.mx[2][0] = xaxis.z;
+    camera.mx[2][1] = yaxis.z;
+    camera.mx[2][2] = zaxis.z;
+    camera.mx[3][0] = -Vector3D.dot(xaxis, eye);
+    camera.mx[3][1] = -Vector3D.dot(yaxis, eye);
+    camera.mx[3][2] = -Vector3D.dot(zaxis, eye);
+
+    return camera;
+  }
   
   static Matrix3D mult(Matrix3D a, Matrix3D b) {
     Matrix3D d = new Matrix3D();

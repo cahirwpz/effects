@@ -48,8 +48,8 @@ public class Object3D {
     world = Matrix3D.mult(world, Matrix3D.translation(x, y, z));
   }
   
-  void transform(Matrix3D projection) {
-    Matrix3D t = Matrix3D.mult(world, projection);
+  void transform(Matrix3D view, Matrix3D projection) {
+    Matrix3D t = Matrix3D.mult(Matrix3D.mult(world, view), projection);
 
     for (int i = 0; i < vertex.length; i++) {
       Vector3D v = t.transform(mesh.vertex[i]);

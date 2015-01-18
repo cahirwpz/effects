@@ -1,28 +1,31 @@
-import processing.data.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.util.ArrayList;
+import processing.data.JSONArray;
+import processing.data.JSONObject;
 
 public class Mesh3D {
   Vector3D[] vertex;
-  MeshPolygon[] face;
+  MeshPolygon[] polygon;
   MeshSurface[] surface;
   
   Mesh3D() {}  
   
   Mesh3D(int vertices, int polygons, int surfaces) {
     this.vertex = new Vector3D[vertices];
-    this.face = new MeshPolygon[polygons];
+    this.polygon = new MeshPolygon[polygons];
     this.surface = new MeshSurface[surfaces];
   }
 
   Mesh3D copy() {
     Mesh3D mesh = new Mesh3D();
     mesh.vertex = vertex;
-    mesh.face = face;
+    mesh.polygon = polygon;
     mesh.surface = surface;
     return mesh;
   }
 
-  static Mesh3D parse(JSONObject json) {
+  static Mesh3D readFromJSON(BufferedReader in) {
+    JSONObject json = new JSONObject(in);
     JSONArray pnts = json.getJSONArray("pnts");
     JSONArray pols = json.getJSONArray("pols");
     JSONArray surf = json.getJSONArray("surf");
@@ -39,16 +42,16 @@ public class Mesh3D {
     for (int i = 0; i < pols.size(); i++) {
       JSONArray p = pols.getJSONArray(i);
       
-      mesh.face[i] = new MeshPolygon(p.size());
+      mesh.polygon[i] = new MeshPolygon(p.size());
       for (int j = 0; j < p.size(); j++)
-        mesh.face[i].vertexIndex[j] = p.getInt(j);
+        mesh.polygon[i].vertexIndex[j] = p.getInt(j);
     }
     
     for (int i = 0; i < ptag.size(); i++) {
       JSONArray t = ptag.getJSONArray(i);
       int polygonIndex = t.getInt(0);
       int surfaceIndex = t.getInt(1);
-      mesh.face[polygonIndex].surfaceIndex = surfaceIndex;
+      mesh.polygon[polygonIndex].surfaceIndex = surfaceIndex;
     }
     
     for (int i = 0; i < surf.size(); i++) {
@@ -66,10 +69,66 @@ public class Mesh3D {
     return mesh;
   }
   
+  static Mesh3D readFromLWO(String path) {
+    IffFile iff = IffFile.read(path);
+    
+    if (!iff.isType("LWO2"))
+      return null;
+    
+    Mesh3D mesh = new Mesh3D();
+    
+    ArrayList<MeshSurface> srfs = new ArrayList<>();
+    
+    for (IffFile.Chunk chunk : iff.chunks) {
+      if (chunk.isType("PNTS")) {
+        int n = chunk.size() / 12;
+        mesh.vertex = new Vector3D[n];
+        for (int i = 0; i < n; i++) {
+          mesh.vertex[i] = chunk.getVector3D();
+        }
+      } else if (chunk.isType("POLS")) {
+        if (chunk.getId().equals("FACE")) {
+          ArrayList<MeshPolygon> pols = new ArrayList<>();
+          while (chunk.hasRemaining()) {
+            MeshPolygon poly = new MeshPolygon(chunk.getShort());
+            for (int i = 0; i < poly.size(); i++)
+              poly.vertexIndex[i] = chunk.getShort();
+            pols.add(poly);
+          }
+          mesh.polygon = pols.toArray(new MeshPolygon[pols.size()]);
+        }
+      } else if (chunk.isType("PTAG")) {
+        if (chunk.getId().equals("SURF")) {
+          while (chunk.hasRemaining()) {
+            int poly = chunk.getShort();
+            int surf = chunk.getShort() - 1;
+            mesh.polygon[poly].surfaceIndex = surf;
+          }
+        }
+      } else if (chunk.isType("SURF")) {
+        String name = chunk.getString();
+        chunk.getString(); /* skip source */
+        MeshSurface surf = new MeshSurface(name, 0xffffff);
+        for (IffFile.Chunk minick : chunk.parseMiniChunks()) {
+          if (minick.isType("COLR")) {
+            Vector3D c = minick.getVector3D();
+            c.scale(255.0f);
+            surf.color = ((int)c.x << 16) | ((int)c.y << 8) | (int)c.z; 
+          }
+        }
+        srfs.add(surf);
+      }
+    }
+    
+    mesh.surface = srfs.toArray(new MeshSurface[srfs.size()]);
+    
+    return mesh;
+  }
+  
   Mesh3D triangulate() {
     ArrayList<MeshPolygon> ts = new ArrayList<MeshPolygon>();
     
-    for (MeshPolygon p : face) {
+    for (MeshPolygon p : polygon) {
       for (int i = 2; i < p.vertexIndex.length; i++) {
         MeshPolygon t = new MeshPolygon(3);
         t.vertexIndex[0] = p.vertexIndex[0];
@@ -83,7 +142,7 @@ public class Mesh3D {
     triangles = ts.toArray(triangles);
     
     Mesh3D m = copy();
-    m.face = triangles;
+    m.polygon = triangles;
     return m;
   }
 };
