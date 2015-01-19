@@ -74,13 +74,14 @@ public class Mesh3D {
               if (mfs[0].equals("newmtl")) {
                 if (surf != null)
                   surface.add(surf);
-                surf = new MeshSurface(mfs[1], 0xffffff);
+                surf = new MeshSurface(mfs[1], Color.white());
                 mtlnum.put(mfs[1], mtl++);
               } else if (mfs[0].equals("Ka")) {
-                int r = (int)(Float.parseFloat(mfs[1]) * 255.0f);
-                int g = (int)(Float.parseFloat(mfs[2]) * 255.0f);
-                int b = (int)(Float.parseFloat(mfs[3]) * 255.0f);
-                surf.color = (r << 16) | (g << 8) | b;
+                surf.color = new Color(Float.parseFloat(mfs[1]),
+                                       Float.parseFloat(mfs[2]),
+                                       Float.parseFloat(mfs[3]));
+              } else if (mfs[0].equals("d") || mfs[0].equals("Tr")) {
+                surf.transparency = Float.parseFloat(mfs[1]);
               }
             }
             
@@ -142,12 +143,11 @@ public class Mesh3D {
       } else if (chunk.isType("SURF")) {
         String name = chunk.getString();
         chunk.getString(); /* skip source */
-        MeshSurface surf = new MeshSurface(name, 0xffffff);
+        MeshSurface surf = new MeshSurface(name, Color.white());
         for (IffFile.Chunk minick : chunk.parseMiniChunks()) {
           if (minick.isType("COLR")) {
             Vector3D c = minick.getVector3D();
-            c.scale(255.0f);
-            surf.color = ((int)c.x << 16) | ((int)c.y << 8) | (int)c.z; 
+            surf.color = new Color(c.x, c.y, c.z); 
           } else if (minick.isType("SPEC")) {
             surf.specular = minick.getFloat();
           } else if (minick.isType("DIFF")) {

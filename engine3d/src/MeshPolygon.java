@@ -17,6 +17,6 @@ public class MeshPolygon {
       point[i] = vertex[vertexIndex[i]];
     point[i] = point[0];
     
-    return new Polygon(point, surface[surfaceIndex].color);
+    return new Polygon(point, surface[surfaceIndex].color.toInteger());
   }
 };
