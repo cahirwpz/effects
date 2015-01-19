@@ -10,10 +10,10 @@ public class Engine3D extends PApplet {
     size(640, 480);
     frameRate(60);
 
-    Mesh3D mesh = Mesh3D.readFromJSON(createReader("cube.json"));
+    Mesh3D rocket = Mesh3D.readFromOBJ("rocket.obj");
     Mesh3D lwo = Mesh3D.readFromLWO("obj2.lwo");
     
-    obj1 = new Object3D(mesh);
+    obj1 = new Object3D(rocket);
     obj2 = new Object3D(lwo);
     
     scene = new Scene3D();
@@ -35,6 +35,7 @@ public class Engine3D extends PApplet {
                        new Vector3D(0, 1, 0));
 
     obj1.reset();
+    obj1.scale(0.01f, 0.01f, 0.01f);
     obj1.rotate(alpha, alpha, alpha);
     obj1.translate(2, 0, -8);
 

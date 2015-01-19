@@ -1,7 +1,10 @@
-import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import processing.data.JSONArray;
-import processing.data.JSONObject;
+import java.util.HashMap;
+import java.util.List;
 
 public class Mesh3D {
   Vector3D[] vertex;
@@ -24,48 +27,78 @@ public class Mesh3D {
     return mesh;
   }
 
-  static Mesh3D readFromJSON(BufferedReader in) {
-    JSONObject json = new JSONObject(in);
-    JSONArray pnts = json.getJSONArray("pnts");
-    JSONArray pols = json.getJSONArray("pols");
-    JSONArray surf = json.getJSONArray("surf");
-    JSONArray ptag = json.getJSONArray("ptag");
+  static Mesh3D readFromOBJ(String path) {
+    List<Vector3D> vertex = new ArrayList<>();
+    List<MeshPolygon> polygon = new ArrayList<>();
+    List<MeshSurface> surface = new ArrayList<>();
+    List<String> mtllib = new ArrayList<>();
+    HashMap<String, Integer> mtlnum = new HashMap<>();
+    Mesh3D mesh = null;
+    int lastmtl = 0;
+    int mtl = 0;
+    
+    try {
+      List<String> lines = Files.readAllLines(
+          Paths.get(path), Charset.defaultCharset());
+      
+      for (String l : lines) {
+        String[] fs = l.trim().split("\\s+");
+        
+        if (fs.length == 0)
+          continue;
+        
+        if (fs[0].equals("v")) {
+          float x = Float.parseFloat(fs[1]);
+          float y = Float.parseFloat(fs[2]);
+          float z = Float.parseFloat(fs[3]);
+          vertex.add(new Vector3D(x, y, z));
+        } else if (fs[0].equals("f")) {
+          MeshPolygon p = new MeshPolygon(fs.length - 1);
+          for (int i = 0; i < fs.length - 1; i++) {
+            String[] vs = fs[i+1].split("/");
+            p.vertexIndex[i] = Integer.parseInt(vs[0]) - 1;
+          }
+          p.surfaceIndex = lastmtl;
+          polygon.add(p);
+        } else if (fs[0].equals("mtllib")) {
+          if (!mtllib.contains(fs[1])) {
+            List<String> mtllines = Files.readAllLines(
+                Paths.get(fs[1]), Charset.defaultCharset());
+            MeshSurface surf = null;
+            for (String ml : mtllines) {
+              String[] mfs = ml.trim().split("\\s+");
+              
+              if (mfs.length == 0)
+                continue;
+              
+              if (mfs[0].equals("newmtl")) {
+                if (surf != null)
+                  surface.add(surf);
+                surf = new MeshSurface(mfs[1], 0xffffff);
+                mtlnum.put(mfs[1], mtl++);
+              } else if (mfs[0].equals("Ka")) {
+                int r = (int)(Float.parseFloat(mfs[1]) * 255.0f);
+                int g = (int)(Float.parseFloat(mfs[2]) * 255.0f);
+                int b = (int)(Float.parseFloat(mfs[3]) * 255.0f);
+                surf.color = (r << 16) | (g << 8) | b;
+              }
+            }
+            
+            if (surf != null)
+              surface.add(surf);
+          }
+        } else if (fs[0].equals("usemtl")) {
+          lastmtl = mtlnum.get(fs[1]);
+        }
+      }
+      
+      mesh = new Mesh3D();
+      mesh.vertex = vertex.toArray(new Vector3D[vertex.size()]);
+      mesh.polygon = polygon.toArray(new MeshPolygon[polygon.size()]);
+      mesh.surface = surface.toArray(new MeshSurface[surface.size()]);
+    } catch (IOException e) {
+    }
 
-    Mesh3D mesh = new Mesh3D(pnts.size(), pols.size(), surf.size());
-
-    for (int i = 0; i < pnts.size(); i++) {
-      JSONArray vertex = pnts.getJSONArray(i);
-      
-      mesh.vertex[i] = new Vector3D(vertex.getInt(0), vertex.getInt(1), vertex.getInt(2));
-    }
-  
-    for (int i = 0; i < pols.size(); i++) {
-      JSONArray p = pols.getJSONArray(i);
-      
-      mesh.polygon[i] = new MeshPolygon(p.size());
-      for (int j = 0; j < p.size(); j++)
-        mesh.polygon[i].vertexIndex[j] = p.getInt(j);
-    }
-    
-    for (int i = 0; i < ptag.size(); i++) {
-      JSONArray t = ptag.getJSONArray(i);
-      int polygonIndex = t.getInt(0);
-      int surfaceIndex = t.getInt(1);
-      mesh.polygon[polygonIndex].surfaceIndex = surfaceIndex;
-    }
-    
-    for (int i = 0; i < surf.size(); i++) {
-      JSONObject s = surf.getJSONObject(i);
-      String name = s.getString("name");
-      JSONArray rgb = s.getJSONArray("color");
-      
-      int r = (int)(rgb.getFloat(0) * 255);
-      int g = (int)(rgb.getFloat(1) * 255);
-      int b = (int)(rgb.getFloat(2) * 255);
-      
-      mesh.surface[i] = new MeshSurface(name, (r << 16) | (g << 8) | b);
-    } 
-    
     return mesh;
   }
   
