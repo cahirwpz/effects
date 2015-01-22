@@ -8,34 +8,40 @@ import java.util.List;
 
 public class Mesh3D {
   Vector3D[] vertex;
+  Vector3D[] normal;
+  UVCoord[] uv;
+  
   MeshPolygon[] polygon;
-  MeshSurface[] surface;
+  MeshMaterial[] material;
   
   Mesh3D() {}  
   
   Mesh3D(int vertices, int polygons, int surfaces) {
     this.vertex = new Vector3D[vertices];
+    this.normal = new Vector3D[vertices];
     this.polygon = new MeshPolygon[polygons];
-    this.surface = new MeshSurface[surfaces];
+    this.material = new MeshMaterial[surfaces];
   }
 
   Mesh3D copy() {
     Mesh3D mesh = new Mesh3D();
     mesh.vertex = vertex;
     mesh.polygon = polygon;
-    mesh.surface = surface;
+    mesh.material = material;
+    mesh.normal = normal;
     return mesh;
   }
 
   static Mesh3D readFromOBJ(String path) {
     List<Vector3D> vertex = new ArrayList<>();
+    List<Vector3D> normal = new ArrayList<>();
+    List<UVCoord> uv = new ArrayList<>();
     List<MeshPolygon> polygon = new ArrayList<>();
-    List<MeshSurface> surface = new ArrayList<>();
+    List<MeshMaterial> material = new ArrayList<>();
     List<String> mtllib = new ArrayList<>();
     HashMap<String, Integer> mtlnum = new HashMap<>();
     Mesh3D mesh = null;
     int lastmtl = 0;
-    int mtl = 0;
     
     try {
       List<String> lines = Files.readAllLines(
@@ -52,19 +58,63 @@ public class Mesh3D {
           float y = Float.parseFloat(fs[2]);
           float z = Float.parseFloat(fs[3]);
           vertex.add(new Vector3D(x, y, z));
+        } else if (fs[0].equals("vn")) {
+          float x = Float.parseFloat(fs[1]);
+          float y = Float.parseFloat(fs[2]);
+          float z = Float.parseFloat(fs[3]);
+          normal.add(new Vector3D(x, y, z));
+        } else if (fs[0].equals("vt")) {
+          float u = Float.parseFloat(fs[1]);
+          float v = Float.parseFloat(fs[2]);
+          uv.add(new UVCoord(u, v));
         } else if (fs[0].equals("f")) {
-          MeshPolygon p = new MeshPolygon(fs.length - 1);
-          for (int i = 0; i < fs.length - 1; i++) {
+          int n = fs.length - 1;
+          int[] vertexIndex = new int[n];
+          int[] vertexNormalIndex = null;
+          int[] uvIndex = null;
+          
+          for (int i = 0; i < n; i++) {
             String[] vs = fs[i+1].split("/");
-            p.vertexIndex[i] = Integer.parseInt(vs[0]) - 1;
+            
+            vertexIndex[i] = Integer.parseInt(vs[0]) - 1;
+            if (vs.length > 1 && !vs[1].isEmpty()) {
+              if (uvIndex == null)
+                uvIndex = new int[n];
+              uvIndex[i] = Integer.parseInt(vs[1]) - 1;
+            }
+            if (vs.length > 2) {
+              if (vertexNormalIndex == null)
+                vertexNormalIndex = new int[n];
+              vertexNormalIndex[i] = Integer.parseInt(vs[2]) - 1;
+            }
           }
-          p.surfaceIndex = lastmtl;
+          MeshPolygon p = new MeshPolygon();
+          p.vertexIndex = vertexIndex;
+          /* 
+           * check if all normal index are the same, if so...
+           * OBJ file writer inefficiently encoded a polygon normal
+           */
+          if (vertexNormalIndex != null) {
+            int first = vertexNormalIndex[0];
+            int i = 1;
+            while (i < vertexNormalIndex.length) {
+              if (first != vertexNormalIndex[i])
+                break;
+              i++;
+            }
+            if (i == vertexNormalIndex.length)
+              p.normalIndex = first;
+            else
+              p.vertexNormalIndex = vertexNormalIndex;
+          }
+          p.uvIndex = uvIndex;
+          p.materialIndex = lastmtl;
           polygon.add(p);
         } else if (fs[0].equals("mtllib")) {
           if (!mtllib.contains(fs[1])) {
             List<String> mtllines = Files.readAllLines(
                 Paths.get(fs[1]), Charset.defaultCharset());
-            MeshSurface surf = null;
+            MeshMaterial mtl = null;
             for (String ml : mtllines) {
               String[] mfs = ml.trim().split("\\s+");
               
@@ -72,21 +122,23 @@ public class Mesh3D {
                 continue;
               
               if (mfs[0].equals("newmtl")) {
-                if (surf != null)
-                  surface.add(surf);
-                surf = new MeshSurface(mfs[1], Color.white());
-                mtlnum.put(mfs[1], mtl++);
-              } else if (mfs[0].equals("Ka")) {
-                surf.color = new Color(Float.parseFloat(mfs[1]),
+                if (mtl != null)
+                  material.add(mtl);
+                mtl = new MeshMaterial(mfs[1]);
+                mtlnum.put(mfs[1], material.size());
+              } else if (mfs[0].equals("map_Kd")) {
+                mtl.texturemap = mfs[1];
+              } else if (mfs[0].equals("Kd")) {
+                mtl.color = new Color(Float.parseFloat(mfs[1]),
                                        Float.parseFloat(mfs[2]),
                                        Float.parseFloat(mfs[3]));
               } else if (mfs[0].equals("d") || mfs[0].equals("Tr")) {
-                surf.transparency = Float.parseFloat(mfs[1]);
+                mtl.transparency = Float.parseFloat(mfs[1]);
               }
             }
             
-            if (surf != null)
-              surface.add(surf);
+            if (mtl != null)
+              material.add(mtl);
           }
         } else if (fs[0].equals("usemtl")) {
           lastmtl = mtlnum.get(fs[1]);
@@ -95,8 +147,10 @@ public class Mesh3D {
       
       mesh = new Mesh3D();
       mesh.vertex = vertex.toArray(new Vector3D[vertex.size()]);
+      mesh.normal = normal.toArray(new Vector3D[normal.size()]);
+      mesh.uv = uv.toArray(new UVCoord[uv.size()]);    
       mesh.polygon = polygon.toArray(new MeshPolygon[polygon.size()]);
-      mesh.surface = surface.toArray(new MeshSurface[surface.size()]);
+      mesh.material = material.toArray(new MeshMaterial[material.size()]);
     } catch (IOException e) {
     }
 
@@ -111,7 +165,7 @@ public class Mesh3D {
     
     Mesh3D mesh = new Mesh3D();
     
-    ArrayList<MeshSurface> srfs = new ArrayList<>();
+    ArrayList<MeshMaterial> srfs = new ArrayList<>();
     ArrayList<String> tags = new ArrayList<>();
     
     for (IffFile.Chunk chunk : iff.chunks) {
@@ -125,9 +179,11 @@ public class Mesh3D {
         if (chunk.getId().equals("FACE")) {
           ArrayList<MeshPolygon> pols = new ArrayList<>();
           while (chunk.hasRemaining()) {
-            MeshPolygon poly = new MeshPolygon(chunk.getShort());
-            for (int i = 0; i < poly.size(); i++)
-              poly.vertexIndex[i] = chunk.getShort();
+            int[] vertexIndex = new int[chunk.getShort()];
+            for (int i = 0; i < vertexIndex.length; i++)
+              vertexIndex[i] = chunk.getShort();
+            MeshPolygon poly = new MeshPolygon();
+            poly.vertexIndex = vertexIndex;
             pols.add(poly);
           }
           mesh.polygon = pols.toArray(new MeshPolygon[pols.size()]);
@@ -137,22 +193,24 @@ public class Mesh3D {
           while (chunk.hasRemaining()) {
             int poly = chunk.getShort();
             int surf = chunk.getShort() - 1;
-            mesh.polygon[poly].surfaceIndex = surf;
+            mesh.polygon[poly].materialIndex = surf;
           }
         }
       } else if (chunk.isType("SURF")) {
         String name = chunk.getString();
         chunk.getString(); /* skip source */
-        MeshSurface surf = new MeshSurface(name, Color.white());
+        MeshMaterial surf = new MeshMaterial(name);
         for (IffFile.Chunk minick : chunk.parseMiniChunks()) {
           if (minick.isType("COLR")) {
             Vector3D c = minick.getVector3D();
-            surf.color = new Color(c.x, c.y, c.z); 
-          } else if (minick.isType("SPEC")) {
-            surf.specular = minick.getFloat();
-          } else if (minick.isType("DIFF")) {
-            surf.diffuse = minick.getFloat();
-          } else if (minick.isType("VERS") || minick.isType("NODS")) {
+            surf.color = new Color(c.x, c.y, c.z);
+          } else if (minick.isType("TRAN")) {
+            surf.transparency = minick.getFloat();
+          } else if (minick.isType("SPEC") ||
+                     minick.isType("DIFF") ||
+                     minick.isType("VERS") ||
+                     minick.isType("NODS"))
+          {
             /* skip */
           } else {
             System.out.println("Mini chunk not handled: " + minick.id);
@@ -169,29 +227,13 @@ public class Mesh3D {
       }
     }
     
-    mesh.surface = srfs.toArray(new MeshSurface[srfs.size()]);
+    mesh.material = srfs.toArray(new MeshMaterial[srfs.size()]);
     
     return mesh;
   }
   
-  Mesh3D triangulate() {
-    ArrayList<MeshPolygon> ts = new ArrayList<MeshPolygon>();
-    
-    for (MeshPolygon p : polygon) {
-      for (int i = 2; i < p.vertexIndex.length; i++) {
-        MeshPolygon t = new MeshPolygon(3);
-        t.vertexIndex[0] = p.vertexIndex[0];
-        t.vertexIndex[1] = p.vertexIndex[i - 1];
-        t.vertexIndex[2] = p.vertexIndex[i];
-        ts.add(t);
-      }
-    }
-    
-    MeshPolygon[] triangles = new MeshPolygon[ts.size()];
-    triangles = ts.toArray(triangles);
-    
-    Mesh3D m = copy();
-    m.polygon = triangles;
-    return m;
+  void load(ResourceManager man) {
+    for (MeshMaterial m : material)
+      m.load(man);
   }
 };

@@ -1,22 +1,23 @@
 public class MeshPolygon {
   int[] vertexIndex;
-  int surfaceIndex;
+  int[] vertexNormalIndex;
+  int[] uvIndex;
+  int materialIndex;
+  int normalIndex;
   
-  MeshPolygon(int vertices) {
-    this.vertexIndex = new int[vertices];
-    this.surfaceIndex = 0;
+  MeshPolygon() {
+    this.materialIndex = -1;
+    this.normalIndex = -1;
   }
   
-  int size() { return vertexIndex.length; }
-
-  Polygon toPolygon(Vector3D[] vertex, MeshSurface[] surface) {
-    Vector3D[] point = new Vector3D[size() + 1];
+  Polygon toPolygon(Vector3D[] vertex, MeshMaterial[] surface) {
+    Vector3D[] point = new Vector3D[vertexIndex.length + 1];
     int i;
   
-    for (i = 0; i < size(); i++)
+    for (i = 0; i < vertexIndex.length; i++)
       point[i] = vertex[vertexIndex[i]];
     point[i] = point[0];
     
-    return new Polygon(point, surface[surfaceIndex].color.toInteger());
+    return new Polygon(point, surface[materialIndex].color.toInteger());
   }
 };

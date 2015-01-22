@@ -41,7 +41,7 @@ public class Scene3D {
         if (outside > 0)
           continue;
 
-        Polygon p = f.toPolygon(obj.vertex, obj.mesh.surface);
+        Polygon p = f.toPolygon(obj.vertex, obj.mesh.material);
 
         // back-face culling
         if (p.normal.z < 0)

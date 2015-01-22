@@ -4,17 +4,20 @@ import processing.core.*;
 public class Engine3D extends PApplet {  
   Object3D obj1, obj2;
   Scene3D scene;
+  ResourceManager manager;
   Rasterizer rasterizer;
   
   public void setup() {
     size(640, 480);
     frameRate(60);
-
-    Mesh3D rocket = Mesh3D.readFromOBJ("rocket.obj");
-    Mesh3D lwo = Mesh3D.readFromLWO("obj2.lwo");
     
-    obj1 = new Object3D(rocket);
-    obj2 = new Object3D(lwo);
+    manager = new ResourceManager();
+    
+    int rocketId = manager.addMesh("rocket.obj");
+    int ballId = manager.addMesh("obj2.lwo");
+
+    obj1 = new Object3D(manager.getMesh(rocketId));
+    obj2 = new Object3D(manager.getMesh(ballId));
     
     scene = new Scene3D();
     scene.add(obj1);

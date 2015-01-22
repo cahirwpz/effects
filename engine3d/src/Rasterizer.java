@@ -1,14 +1,15 @@
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
-import processing.core.*;
+import processing.core.PApplet;
 
 public class Rasterizer {
-  ArrayList<Polygon> polygons;
-  PApplet            parent;
+  PApplet       parent;
+  List<Polygon> polygons;
 
   Rasterizer(PApplet parent) {
-    this.polygons = new ArrayList<Polygon>();
+    this.polygons = new ArrayList<>();
     this.parent = parent;
   }
 
