@@ -69,45 +69,30 @@ public class Mesh3D {
           uv.add(new UVCoord(u, v));
         } else if (fs[0].equals("f")) {
           int n = fs.length - 1;
-          int[] vertexIndex = new int[n];
-          int[] vertexNormalIndex = null;
-          int[] uvIndex = null;
+          MeshPolygon p = new MeshPolygon(n);
+          int normalIndex = -1;
+          boolean sameNormal = true;
           
           for (int i = 0; i < n; i++) {
             String[] vs = fs[i+1].split("/");
-            
-            vertexIndex[i] = Integer.parseInt(vs[0]) - 1;
-            if (vs.length > 1 && !vs[1].isEmpty()) {
-              if (uvIndex == null)
-                uvIndex = new int[n];
-              uvIndex[i] = Integer.parseInt(vs[1]) - 1;
-            }
+            MeshVertex mv = new MeshVertex(Integer.parseInt(vs[0]) - 1);
+            if (vs.length > 1 && !vs[1].isEmpty())
+              mv.uvIndex = Integer.parseInt(vs[1]) - 1;
             if (vs.length > 2) {
-              if (vertexNormalIndex == null)
-                vertexNormalIndex = new int[n];
-              vertexNormalIndex[i] = Integer.parseInt(vs[2]) - 1;
+              mv.normalIndex = Integer.parseInt(vs[2]) - 1;
+              if (normalIndex < 0) {
+                normalIndex = mv.normalIndex;
+              } if (sameNormal && normalIndex != mv.normalIndex) {
+                sameNormal = false;
+              }
             }
+            p.vertex[i] = mv;
           }
-          MeshPolygon p = new MeshPolygon();
-          p.vertexIndex = vertexIndex;
-          /* 
-           * check if all normal index are the same, if so...
-           * OBJ file writer inefficiently encoded a polygon normal
-           */
-          if (vertexNormalIndex != null) {
-            int first = vertexNormalIndex[0];
-            int i = 1;
-            while (i < vertexNormalIndex.length) {
-              if (first != vertexNormalIndex[i])
-                break;
-              i++;
-            }
-            if (i == vertexNormalIndex.length)
-              p.normalIndex = first;
-            else
-              p.vertexNormalIndex = vertexNormalIndex;
-          }
-          p.uvIndex = uvIndex;
+          /* if all normal index are the same, then polygon normal is encoded */
+          if (sameNormal)
+            for (MeshVertex mv : p.vertex)
+              mv.normalIndex = -1;
+          p.normalIndex = normalIndex;
           p.materialIndex = lastmtl;
           polygon.add(p);
         } else if (fs[0].equals("mtllib")) {
@@ -179,12 +164,11 @@ public class Mesh3D {
         if (chunk.getId().equals("FACE")) {
           ArrayList<MeshPolygon> pols = new ArrayList<>();
           while (chunk.hasRemaining()) {
-            int[] vertexIndex = new int[chunk.getShort()];
-            for (int i = 0; i < vertexIndex.length; i++)
-              vertexIndex[i] = chunk.getShort();
-            MeshPolygon poly = new MeshPolygon();
-            poly.vertexIndex = vertexIndex;
-            pols.add(poly);
+            int n = chunk.getShort();
+            MeshPolygon mp = new MeshPolygon(n);
+            for (int i = 0; i < n; i++)
+              mp.vertex[i] = new MeshVertex(chunk.getShort());
+            pols.add(mp);
           }
           mesh.polygon = pols.toArray(new MeshPolygon[pols.size()]);
         }

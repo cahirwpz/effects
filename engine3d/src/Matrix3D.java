@@ -176,12 +176,10 @@ public class Matrix3D {
     return d;
   }
 
-  Vector3D transform(Vector3D u) {
-    float x = mx[0][0] * u.x + mx[0][1] * u.y + mx[0][2] * u.z + mx[0][3];
-    float y = mx[1][0] * u.x + mx[1][1] * u.y + mx[1][2] * u.z + mx[1][3];
-    float z = mx[2][0] * u.x + mx[2][1] * u.y + mx[2][2] * u.z + mx[2][3];
-    float w = mx[3][0] * u.x + mx[3][1] * u.y + mx[3][2] * u.z + mx[3][3];
-    
-    return new Vector3D(x, y, z, w);
+  void transform(Vector3D dst, Vector3D src) {
+    dst.x = mx[0][0] * src.x + mx[0][1] * src.y + mx[0][2] * src.z + mx[0][3];
+    dst.y = mx[1][0] * src.x + mx[1][1] * src.y + mx[1][2] * src.z + mx[1][3];
+    dst.z = mx[2][0] * src.x + mx[2][1] * src.y + mx[2][2] * src.z + mx[2][3];
+    dst.w = mx[3][0] * src.x + mx[3][1] * src.y + mx[3][2] * src.z + mx[3][3];
   }
 };

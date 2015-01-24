@@ -28,26 +28,29 @@ public class Scene3D {
     
     for (Object3D obj : objects) {
       obj.transform(view, projection);
-      obj.refreshClipFlags();
  
-      for (MeshPolygon f : obj.mesh.polygon) {
-        int clipFlags = 0, outside = -1;
+      for (Polygon p : obj.polygon) {
+        p.refreshNormal();
+                
+        int outsideFlags = -1;
+        int clipFlags = 0;
 
-        for (int k : f.vertexIndex) {
-          clipFlags |= obj.clipFlags[k];
-          outside &= obj.clipFlags[k];
+        for (Vertex v : p.vertex) {
+          clipFlags |= obj.clipFlags[v.index];
+          outsideFlags &= obj.clipFlags[v.index];
         }
-
-        if (outside > 0)
+          
+        if (outsideFlags != 0)
           continue;
-
-        Polygon p = f.toPolygon(obj.vertex, obj.mesh.material);
 
         // back-face culling
         if (p.normal.z < 0)
           continue;
 
-        if (p.clip(clipFlags))
+        if (clipFlags != 0)
+          p = Frustum.clip(p, clipFlags);
+
+        if (p != null)
           r.add(p);
       }
     }

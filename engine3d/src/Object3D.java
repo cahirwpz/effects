@@ -1,34 +1,51 @@
+import processing.core.PImage;
+
 public class Object3D {
   Mesh3D mesh;
   Matrix3D world;
+  Polygon[] polygon;
   Vector3D[] vertex;
+  Vector3D[] normal;
   int[] clipFlags;
   
-  Object3D(Mesh3D mesh) {
-    this.mesh = mesh;
-    this.world = new Matrix3D();
-    this.vertex = new Vector3D[mesh.vertex.length];
-    this.clipFlags = new int[mesh.vertex.length];
-  }
-
-  void refreshClipFlags() {
-    for (int i = 0; i < vertex.length; i++) {
-      float x = vertex[i].x, y = vertex[i].y, z = vertex[i].z;
+  Object3D(ResourceManager man, int meshId) {
+    mesh = man.getMesh(meshId);
+    world = new Matrix3D();
+    polygon = new Polygon[mesh.polygon.length];
+    vertex = new Vector3D[mesh.vertex.length];
+    clipFlags = new int[mesh.vertex.length];
+    
+    for (int i = 0; i < mesh.vertex.length; i++)
+      vertex[i] = new Vector3D();
+    
+    if (mesh.normal != null) {
+      normal = new Vector3D[mesh.normal.length];
+      for (int i = 0; i < mesh.normal.length; i++)
+        normal[i] = mesh.normal[i];
+    }
+ 
+    for (int i = 0; i < mesh.polygon.length; i++) {
+      MeshPolygon mp = mesh.polygon[i];
+      MeshMaterial mm = mesh.material[mp.materialIndex];
+      PImage texture = (mm.texturemapId < 0) ? null : man.getImage(mm.texturemapId);
+      Vertex[] pv = new Vertex[mp.vertex.length + 1];
+      int j;
+    
+      for (j = 0; j < mp.vertex.length; j++) {
+        MeshVertex mv = mp.vertex[j];
+        Vector3D p = vertex[mv.index];
+        Vector3D n = (mv.normalIndex < 0) ? null : normal[mv.normalIndex];
+        UVCoord uv = (mv.uvIndex < 0) ? null : mesh.uv[mv.uvIndex];
+        if (texture != null) {
+          uv.u *= texture.width;
+          uv.v *= texture.height;
+        }
+        pv[j] = new Vertex(mv.index, p, n, uv);
+      }
+      pv[j] = pv[0];
       
-      clipFlags[i] = 0;
-      
-      if (x < -1.0f)
-        clipFlags[i] |= Polygon.PF_LEFT;
-      if (x >= 1.0f)
-        clipFlags[i] |= Polygon.PF_RIGHT;
-      if (y < -1.0f)
-        clipFlags[i] |= Polygon.PF_TOP;
-      if (y >= 1.0f)
-        clipFlags[i] |= Polygon.PF_BOTTOM;
-      if (z < -1.0f)
-        clipFlags[i] |= Polygon.PF_NEAR;
-      if (z >= 1.0f)
-        clipFlags[i] |= Polygon.PF_FAR;
+      polygon[i] = new Polygon(pv, mm.color.toInteger());
+      polygon[i].texture = texture;
     }
   }
   
@@ -52,9 +69,9 @@ public class Object3D {
     Matrix3D t = Matrix3D.mult(Matrix3D.mult(world, view), projection);
 
     for (int i = 0; i < vertex.length; i++) {
-      Vector3D v = t.transform(mesh.vertex[i]);
-      v.scale(1.0f / v.w);
-      vertex[i] = v;
+      t.transform(vertex[i], mesh.vertex[i]);
+      vertex[i].scale(1.0f / vertex[i].w);
+      clipFlags[i] = Frustum.clipFlags(vertex[i]);
     }
   }
 }

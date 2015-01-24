@@ -16,8 +16,8 @@ public class Engine3D extends PApplet {
     int rocketId = manager.addMesh("rocket.obj");
     int ballId = manager.addMesh("obj2.lwo");
 
-    obj1 = new Object3D(manager.getMesh(rocketId));
-    obj2 = new Object3D(manager.getMesh(ballId));
+    obj1 = new Object3D(manager, rocketId);
+    obj2 = new Object3D(manager, ballId);
     
     scene = new Scene3D();
     scene.add(obj1);

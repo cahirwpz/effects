@@ -141,7 +141,7 @@ public class Rasterizer {
   }
 
   void add(Polygon p) {
-    if (p.size() > 2) {
+    if (p.vertex.length > 2) {
       p.refreshDepth();
       polygons.add(p);
     }
@@ -151,12 +151,12 @@ public class Rasterizer {
     Collections.sort(polygons);
     
     for (Polygon p : polygons) {
-      Vector3D[] pt = new Vector3D[p.size()];
+      Vector3D[] pt = new Vector3D[p.vertex.length];
 
-      for (int i = 0; i < p.size(); i++) {
-        float x = 0.5f * (parent.width - 1) * (p.point[i].x + 1.0f);
-        float y = 0.5f * (parent.height - 1) * (p.point[i].y + 1.0f);
-        pt[i] = new Vector3D(x, y, p.point[i].z);
+      for (int i = 0; i < p.vertex.length; i++) {
+        float x = 0.5f * (parent.width - 1) * (p.vertex[i].pos.x + 1.0f);
+        float y = 0.5f * (parent.height - 1) * (p.vertex[i].pos.y + 1.0f);
+        pt[i] = new Vector3D(x, y, p.vertex[i].pos.z);
       }
 
       int color = parent.lerpColor(0, p.color, p.normal.z);
