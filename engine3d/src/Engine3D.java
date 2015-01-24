@@ -5,7 +5,7 @@ public class Engine3D extends PApplet {
   Object3D obj1, obj2;
   Scene3D scene;
   ResourceManager manager;
-  Rasterizer rasterizer;
+  Renderer renderer;
   
   public void setup() {
     size(640, 480);
@@ -23,7 +23,7 @@ public class Engine3D extends PApplet {
     scene.add(obj1);
     scene.add(obj2);
     
-    rasterizer = new Rasterizer(this);
+    renderer = new Renderer(this);
   }
 
   public void draw() {
@@ -47,7 +47,7 @@ public class Engine3D extends PApplet {
     obj2.rotate(alpha, alpha, alpha);
     obj2.translate(-2, 0, -8);
 
-    scene.draw(rasterizer);
+    scene.draw(renderer);
 
     updatePixels();
   }

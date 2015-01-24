@@ -28,7 +28,7 @@ public class Scene3D {
     view = Matrix3D.cameraLookAt(eye, target, up);
   }
 
-  void draw(Rasterizer r) {
+  void draw(Renderer r) {
     List<Polygon> polygons = new ArrayList<>();
     
     for (Object3D obj : objects) {

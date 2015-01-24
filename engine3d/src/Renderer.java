@@ -1,13 +1,13 @@
 import processing.core.PApplet;
 
-public class Rasterizer {
+public class Renderer {
   PApplet parent;
   int[] pixels;
   int width;
   int height;
   int color;
   
-  Rasterizer(PApplet parent) {
+  Renderer(PApplet parent) {
     this.parent = parent;
     
     parent.loadPixels();
