@@ -35,7 +35,7 @@ public class Object3D {
         MeshVertex mv = mp.vertex[j];
         Vector3D p = vertex[mv.index];
         Vector3D n = (mv.normalIndex < 0) ? null : normal[mv.normalIndex];
-        UVCoord uv = (mv.uvIndex < 0) ? null : mesh.uv[mv.uvIndex];
+        UVCoord uv = (mv.uvIndex < 0) ? null : mesh.uv[mv.uvIndex].copy();
         if (texture != null) {
           uv.u *= texture.width;
           uv.v *= texture.height;
@@ -44,8 +44,10 @@ public class Object3D {
       }
       pv[j] = pv[0];
       
-      polygon[i] = new Polygon(pv, mm.color.toInteger());
-      polygon[i].texture = texture;
+      if (texture != null)
+        polygon[i] = new Polygon(pv, texture);
+      else
+        polygon[i] = new Polygon(pv, mm.color.toInteger());
     }
   }
   
@@ -55,6 +57,10 @@ public class Object3D {
   
   void scale(float scaleX, float scaleY, float scaleZ) {
     world = Matrix3D.mult(world, Matrix3D.scaling(scaleX, scaleY, scaleZ));
+  }
+
+  void scale(float value) {
+    world = Matrix3D.mult(world, Matrix3D.scaling(value, value, value));
   }
   
   void rotate(float angleX, float angleY, float angleZ) {

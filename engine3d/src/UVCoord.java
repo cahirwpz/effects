@@ -5,4 +5,8 @@ public class UVCoord {
     this.u = u;
     this.v = v;
   }
+
+  public UVCoord copy() {
+    return new UVCoord(u, v);
+  }
 }

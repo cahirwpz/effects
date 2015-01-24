@@ -50,6 +50,12 @@ public class Frustum {
 
       return out.toArray(new Vertex[out.size()]);
     }
+    
+    UVCoord clipUV(UVCoord s, UVCoord e, float t) {
+      if (s != null && e != null)
+        return new UVCoord(e.u + (s.u - e.u) * t, e.v + (s.v - e.v) * t);      
+      return null;
+    }
   };
 
   class Left extends Plane {
@@ -67,6 +73,7 @@ public class Frustum {
 
       float t = (-1.0f - e.pos.x) / d.x;
       ns.pos = new Vector3D(-1.0f, e.pos.y + d.y * t, e.pos.z + d.z * t);
+      ns.uv = clipUV(s.uv, e.uv, t);
       return ns;
     }
   };
@@ -86,6 +93,7 @@ public class Frustum {
       
       float t = (1.0f - e.pos.x) / d.x;
       ns.pos = new Vector3D(1.0f, e.pos.y + d.y * t, e.pos.z + d.z * t);
+      ns.uv = clipUV(s.uv, e.uv, t);
       return ns;
     }
   };
@@ -105,6 +113,7 @@ public class Frustum {
       
       float t = (-1.0f - e.pos.y) / d.y;
       ns.pos = new Vector3D(e.pos.x + d.x * t, -1.0f, e.pos.z + d.z * t);
+      ns.uv = clipUV(s.uv, e.uv, t);
       return ns;
     }
   };
@@ -123,6 +132,7 @@ public class Frustum {
       Vertex ns = s.copy();
       float t = (1.0f - e.pos.y) / d.y;
       ns.pos = new Vector3D(e.pos.x + d.x * t, 1.0f, e.pos.z + d.z * t);
+      ns.uv = clipUV(s.uv, e.uv, t);
       return ns;
     }
   };
@@ -141,6 +151,7 @@ public class Frustum {
       Vertex ns = s.copy();
       float t = (-1.0f - e.pos.z) / d.z;
       ns.pos = new Vector3D(e.pos.x + d.x * t, e.pos.y + d.y * t, -1.0f);
+      ns.uv = clipUV(s.uv, e.uv, t);
       return ns;
     }
   };
@@ -160,6 +171,7 @@ public class Frustum {
       
       float t = (1.0f - e.pos.z) / d.z;
       ns.pos = new Vector3D(e.pos.x + d.x * t, e.pos.y + d.y * t, 1.0f);
+      ns.uv = clipUV(s.uv, e.uv, t);
       return ns;
     }
   }
@@ -198,9 +210,8 @@ public class Frustum {
         return null;
     }
 
-    Polygon out = new Polygon(vertex, in.color);
-    out.normal = in.normal;
-    out.depth = in.depth;
+    Polygon out = in.copy();
+    out.vertex = vertex;
     return out;
   }
 }

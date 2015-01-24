@@ -65,8 +65,8 @@ public class Scene3D {
     
     Collections.sort(polygons);
 
-    for (Polygon polygon : polygons) {
-      Vertex[] vertex = polygon.vertex;
+    for (Polygon poly : polygons) {
+      Vertex[] vertex = poly.vertex;
 
       for (int i = 0; i < vertex.length; i++) {
         Vector3D p = vertex[i].pos;
@@ -78,10 +78,7 @@ public class Scene3D {
         }
       }
 
-      r.color = r.lerpColor(0, polygon.color, polygon.normal.z);
-
-      for (int i = 2; i < vertex.length; i++)
-        r.triangle(vertex[0], vertex[i - 1], vertex[i]);
+      r.polygon(poly);
     }
   }
 };

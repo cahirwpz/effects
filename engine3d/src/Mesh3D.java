@@ -64,8 +64,8 @@ public class Mesh3D {
           float z = Float.parseFloat(fs[3]);
           normal.add(new Vector3D(x, y, z));
         } else if (fs[0].equals("vt")) {
-          float u = Float.parseFloat(fs[1]);
-          float v = Float.parseFloat(fs[2]);
+          float u = Float.parseFloat(fs[1]); // horizontal
+          float v = 1.0f - Float.parseFloat(fs[2]); // vertical
           uv.add(new UVCoord(u, v));
         } else if (fs[0].equals("f")) {
           int n = fs.length - 1;
