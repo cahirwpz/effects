@@ -2,11 +2,11 @@ import processing.core.PApplet;
 
 public class Rasterizer {
   PApplet parent;
-  int[]   pixels;
-  int     width;
-  int     height;
-  int     color;
-
+  int[] pixels;
+  int width;
+  int height;
+  int color;
+  
   Rasterizer(PApplet parent) {
     this.parent = parent;
     
@@ -15,17 +15,20 @@ public class Rasterizer {
     this.height = parent.height;
     this.pixels = parent.pixels;
   }
+  
+  int lerpColor(int c1, int c2, float amt) {
+    return parent.lerpColor(c1, c2, amt);
+  }
 
-  void line(float x1f, float y1f, float x2f, float y2f, int col) {
-    if (y2f < y1f) {
-      float xf = x1f; x1f = x2f; x2f = xf;
-      float yf = y1f; y1f = y2f; y2f = yf;
+  void line(Vector3D v1, Vector3D v2) {
+    if (v1.y > v2.y) {
+      Vector3D vt = v1; v1 = v2; v2 = vt;
     }
 
-    int x1 = (int) x1f, y1 = (int) y1f;
-    int x2 = (int) x2f, y2 = (int) y2f;
-    int x1i = (int) (x1f * 16), y1i = (int) (y1f * 16);
-    int x2i = (int) (x2f * 16), y2i = (int) (y2f * 16);
+    int x1 = (int) v1.x, y1 = (int) v1.y;
+    int x2 = (int) v2.x, y2 = (int) v2.y;
+    int x1i = (int) (v1.x * 16), y1i = (int) (v1.y * 16);
+    int x2i = (int) (v2.x * 16), y2i = (int) (v2.y * 16);
     int dx = Math.abs(x2i - x1i), dy = Math.abs(y2i - y1i);
 
     int ix = (x1i < x2i) ? 1 : -1;
@@ -39,7 +42,7 @@ public class Rasterizer {
       int d2 = 2 * dy;
 
       do {
-        pixels[k] = col;
+        pixels[k] = color;
         k += ix;
         if (err > 0) {
           k += width;
@@ -56,7 +59,7 @@ public class Rasterizer {
       int d2 = 2 * dx;
 
       do {
-        pixels[k] = col;
+        pixels[k] = color;
         k += width;
         if (err > 0) {
           k += ix;
@@ -69,33 +72,37 @@ public class Rasterizer {
   }
 
   public class EdgeScan {
-    int xi; 
+    float dx, dy;
     int y, h;
-    float x, dx;
+
+    int xi;
+    float x, dxdy;
 
     EdgeScan(Vertex s, Vertex e) {
       x = s.pos.x;
+      dx = e.pos.x - s.pos.x;
+      dy = e.pos.y - s.pos.y;
+      
       y = Math.round(s.pos.y);
-      h = Math.round(e.pos.y) - Math.round(s.pos.y);
+      h = Math.round(e.pos.y) - Math.round(s.pos.y);      
 
       if (h > 0) {
-        float dy = 1.0f / (e.pos.y - s.pos.y);
         float prestep = (float)Math.ceil(s.pos.y + 0.5f) - (s.pos.y + 0.5f);
         
-        dx = (e.pos.x - s.pos.x) * dy;
-        x += dx * prestep;
+        dxdy = dx / dy;
+        x += dxdy * prestep;
       }
 
       xi = Math.round(x);
     }
 
-    void next() {
-      x += dx;
+    void step() {
+      x += dxdy;
       xi = Math.round(x);
     }
   };
 
-  private void span(EdgeScan left, EdgeScan right, int y, int h) {
+  void span(EdgeScan left, EdgeScan right, int y, int h) {
     int line = y * width;
     
     while (h-- > 0) {
@@ -106,13 +113,13 @@ public class Rasterizer {
         pixels[line + xs] = color;
       } while (++xs <= xe);
 
-      left.next();
-      right.next();
+      left.step();
+      right.step();
       line += width;
     }
   }
 
-  void draw(Vertex v0, Vertex v1, Vertex v2) {
+  void triangle(Vertex v0, Vertex v1, Vertex v2) {
     if (v0.pos.y > v1.pos.y) {
       Vertex vt = v0; v0 = v1; v1 = vt;
     }
@@ -130,11 +137,11 @@ public class Rasterizer {
     boolean longOnRight;
 
     if (e01.h == 0)
-      longOnRight = v1.pos.x < v0.pos.x;
+      longOnRight = e01.dx < 0;
     else if (e12.h == 0)
-      longOnRight = v2.pos.x > v1.pos.x;
+      longOnRight = e12.dx > 0;
     else
-      longOnRight = e01.dx < e02.dx;
+      longOnRight = e01.dxdy < e02.dxdy;
 
     if (longOnRight) {
       span(e01, e02, e01.y, e01.h);
@@ -143,24 +150,5 @@ public class Rasterizer {
       span(e02, e01, e01.y, e01.h);
       span(e02, e12, e12.y, e12.h);
     }
-  }
-
-  void draw(Polygon polygon) {
-    Vertex[] vertex = polygon.vertex;
-
-    for (int i = 0; i < vertex.length; i++) {
-      Vector3D p = vertex[i].pos;
-      // if w is zero the vector has been projected onto 2d plane
-      if (p.w != 0.0f) {
-        p.x = 0.5f * (width - 1) * (p.x + 1.0f);
-        p.y = 0.5f * (height - 1) * (p.y + 1.0f);
-        p.w = 0.0f;
-      }
-    }
-
-    color = parent.lerpColor(0, polygon.color, polygon.normal.z);
-
-    for (int i = 2; i < vertex.length; i++)
-      draw(vertex[0], vertex[i - 1], vertex[i]);
   }
 };

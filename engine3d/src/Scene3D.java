@@ -64,9 +64,25 @@ public class Scene3D {
     }
     
     Collections.sort(polygons);
-    
-    for (Polygon polygon : polygons)
-      r.draw(polygon);
+
+    for (Polygon polygon : polygons) {
+      Vertex[] vertex = polygon.vertex;
+
+      for (int i = 0; i < vertex.length; i++) {
+        Vector3D p = vertex[i].pos;
+        // if w is zero the vector has been projected onto 2d plane
+        if (p.w != 0.0f) {
+          p.x = 0.5f * (r.width - 1) * (p.x + 1.0f);
+          p.y = 0.5f * (r.height - 1) * (p.y + 1.0f);
+          p.w = 0.0f;
+        }
+      }
+
+      r.color = r.lerpColor(0, polygon.color, polygon.normal.z);
+
+      for (int i = 2; i < vertex.length; i++)
+        r.triangle(vertex[0], vertex[i - 1], vertex[i]);
+    }
   }
 };
 
