@@ -9,7 +9,13 @@ public class Polygon implements Comparable<Polygon> {
   int color;
   PImage texture;
   boolean doubleSided;
-  
+
+  Polygon(Vertex[] vertex) {
+    this.mode = DisplayMode.WIREFRAME;
+    this.vertex = vertex;
+    this.color = 0xffffff;
+  }
+
   Polygon(Vertex[] vertex, int color) {
     this.mode = DisplayMode.FLAT_SHADED;
     this.vertex = vertex;
@@ -23,17 +29,16 @@ public class Polygon implements Comparable<Polygon> {
   }
 
   Polygon copy() {
-    Polygon p = null;
-    
-    switch (mode) {
-      case FLAT_SHADED:
-        p = new Polygon(vertex, color);
-        break;
-      case TEXTURED:
-        p = new Polygon(vertex, texture);
-        break;
+    Polygon p;
+
+    if (mode == DisplayMode.FLAT_SHADED) {
+      p = new Polygon(vertex, color);
+    } else if (mode == DisplayMode.TEXTURED) {
+      p = new Polygon(vertex, texture);
+    } else {
+      p = new Polygon(vertex);       
     }
-    
+      
     p.depth = depth;
     p.normal = normal;
     p.doubleSided = doubleSided;

@@ -1,3 +1,3 @@
 public enum DisplayMode {
-  FLAT_SHADED, TEXTURED
+  WIREFRAME, FLAT_SHADED, TEXTURED
 }

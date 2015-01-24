@@ -90,8 +90,7 @@ public class Renderer {
       h = Math.round(r.y) - Math.round(l.y);      
 
       if (h > 0) {
-        float prestep = (float)Math.ceil(l.y + 0.5f) - (l.y + 0.5f);
-        
+        float prestep = (float)Math.round(l.y) + 0.5f - l.y;
         dxdy = dx / dy;
         x += dxdy * prestep;
       }
@@ -109,9 +108,10 @@ public class Renderer {
       int xs = Math.round(left.x);
       int xe = Math.round(right.x);
 
-      do {
-        pixels[line + xs] = color;
-      } while (++xs < xe);
+      while (xs < xe) {
+        pixels[line + xs] += color;
+        xs++;
+      }
       
       left.step();
       right.step();
@@ -174,7 +174,7 @@ public class Renderer {
       h = Math.round(rp.y) - Math.round(lp.y);      
 
       if (h > 0) {
-        float prestep = (float)Math.ceil(lp.y + 0.5f) - (lp.y + 0.5f);
+        float prestep = (float)Math.round(lp.y) + 0.5f - lp.y;
         float inv_dy = 1.0f / dy;
         
         dxdy = dx * inv_dy;
@@ -205,7 +205,7 @@ public class Renderer {
       float du = right.u - left.u;
       float dv = right.v - left.v;
       
-      float prestep = (float)Math.ceil(left.x + 0.5f) - (left.x + 0.5f);
+      float prestep = (float)Math.round(left.x) + 0.5f - left.x;
       float inv_dx = 1.0f / dx;
 
       float dudx = du * inv_dx;
@@ -214,7 +214,7 @@ public class Renderer {
       float u = left.u + prestep * dudx;
       float v = left.v + prestep * dvdx;
       
-      do {
+      while (xs < xe) {
         int ui = Math.round(u) & (texture.width - 1);
         int vi = Math.round(v) & (texture.height - 1);
 
@@ -222,7 +222,8 @@ public class Renderer {
         
         u += dudx;
         v += dvdx;
-      } while (++xs < xe);
+        xs++;
+      }
       
       left.step();
       right.step();
@@ -274,7 +275,10 @@ public class Renderer {
     texture = null;
     color = 0xffffff;
     
-    if (mode == DisplayMode.FLAT_SHADED) {
+    if (mode == DisplayMode.WIREFRAME) {
+      for (int i = 0; i < poly.vertex.length - 1; i++)
+        line(poly.vertex[i].pos, poly.vertex[i + 1].pos);    
+    } else if (mode == DisplayMode.FLAT_SHADED) {
       color = lerpColor(0, poly.color, poly.normal.z);
       for (int i = 2; i < poly.vertex.length; i++)
         triangle(poly.vertex[0].pos, poly.vertex[i - 1].pos, poly.vertex[i].pos);
