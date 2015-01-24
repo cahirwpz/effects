@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class Scene3D {
   ArrayList<Object3D> objects;
@@ -27,7 +29,7 @@ public class Scene3D {
   }
 
   void draw(Rasterizer r) {
-    r.reset();
+    List<Polygon> polygons = new ArrayList<>();
     
     for (Object3D obj : objects) {
       obj.transform(view, projection);
@@ -54,12 +56,17 @@ public class Scene3D {
         if (clipFlags != 0)
           p = frustum.clipPolygon(p, clipFlags);
 
-        if (p != null)
-          r.add(p);
+        if (p != null && p.vertex.length > 2) {
+          p.updateDepth();
+          polygons.add(p);
+        }
       }
     }
     
-    r.draw();
+    Collections.sort(polygons);
+    
+    for (Polygon polygon : polygons)
+      r.draw(polygon);
   }
 };
 

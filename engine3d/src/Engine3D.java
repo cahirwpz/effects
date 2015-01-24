@@ -1,4 +1,4 @@
-import processing.core.*;
+import processing.core.PApplet;
 
 @SuppressWarnings("serial")
 public class Engine3D extends PApplet {  

@@ -1,16 +1,19 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import processing.core.PApplet;
 
 public class Rasterizer {
-  PApplet       parent;
-  List<Polygon> polygons;
+  PApplet parent;
+  int[]   pixels;
+  int     width;
+  int     height;
+  int     color;
 
   Rasterizer(PApplet parent) {
-    this.polygons = new ArrayList<>();
     this.parent = parent;
+    
+    parent.loadPixels();
+    this.width = parent.width;
+    this.height = parent.height;
+    this.pixels = parent.pixels;
   }
 
   void line(float x1f, float y1f, float x2f, float y2f, int col) {
@@ -29,32 +32,32 @@ public class Rasterizer {
     int fr = (15 - y1i) & 15;
 
     if (dy < dx) {
-      int k = x1 + parent.width * y1;
+      int k = x1 + width * y1;
       int n = Math.abs(x2 - x1);
       int err = 2 * dy - 2 * dx * fr / 16;
       int d1 = 2 * (dy - dx);
       int d2 = 2 * dy;
 
       do {
-        parent.pixels[k] = col;
+        pixels[k] = col;
         k += ix;
         if (err > 0) {
-          k += parent.width;
+          k += width;
           err += d1;
         } else {
           err += d2;
         }
       } while (--n >= 0);
     } else {
-      int k = x1 + parent.width * y1;
+      int k = x1 + width * y1;
       int n = Math.abs(y2 - y1);
       int err = 2 * dx - 2 * dy * fr / 16;
       int d1 = 2 * (dx - dy);
       int d2 = 2 * dx;
 
       do {
-        parent.pixels[k] = col;
-        k += parent.width;
+        pixels[k] = col;
+        k += width;
         if (err > 0) {
           k += ix;
           err += d1;
@@ -66,17 +69,21 @@ public class Rasterizer {
   }
 
   public class EdgeScan {
-    int xi, y, h;
+    int xi; 
+    int y, h;
     float x, dx;
 
-    EdgeScan(Vector3D s, Vector3D e) {
-      x = s.x;
-      y = Math.round(s.y);
-      h = Math.round(e.y) - Math.round(s.y);
+    EdgeScan(Vertex s, Vertex e) {
+      x = s.pos.x;
+      y = Math.round(s.pos.y);
+      h = Math.round(e.pos.y) - Math.round(s.pos.y);
 
       if (h > 0) {
-        dx = (e.x - s.x) / (e.y - s.y);
-        x += dx * (Math.ceil(s.y + 0.5f) - (s.y + 0.5f));
+        float dy = 1.0f / (e.pos.y - s.pos.y);
+        float prestep = (float)Math.ceil(s.pos.y + 0.5f) - (s.pos.y + 0.5f);
+        
+        dx = (e.pos.x - s.pos.x) * dy;
+        x += dx * prestep;
       }
 
       xi = Math.round(x);
@@ -85,84 +92,75 @@ public class Rasterizer {
     void next() {
       x += dx;
       xi = Math.round(x);
-      y++;
     }
   };
 
-  private void span(int xs, int xe, int y, int col) {
-    int k = y * parent.width;
+  private void span(EdgeScan left, EdgeScan right, int y, int h) {
+    int line = y * width;
+    
+    while (h-- > 0) {
+      int xs = left.xi;
+      int xe = right.xi;
 
-    do {
-      parent.pixels[xs + k] = col;
-    } while (++xs <= xe);
+      do {
+        pixels[line + xs] = color;
+      } while (++xs <= xe);
+
+      left.next();
+      right.next();
+      line += width;
+    }
   }
 
-  private void triangle(Vector3D p0, Vector3D p1, Vector3D p2, int col) {
-    if (p0.y > p1.y) {
-      Vector3D pt = p0; p0 = p1; p1 = pt;
+  void draw(Vertex v0, Vertex v1, Vertex v2) {
+    if (v0.pos.y > v1.pos.y) {
+      Vertex vt = v0; v0 = v1; v1 = vt;
     }
-    if (p0.y > p2.y) {
-      Vector3D pt = p0; p0 = p2; p2 = pt;
+    if (v0.pos.y > v2.pos.y) {
+      Vertex vt = v0; v0 = v2; v2 = vt;
     }
-    if (p1.y > p2.y) {
-      Vector3D pt = p1; p1 = p2; p2 = pt;
+    if (v1.pos.y > v2.pos.y) {
+      Vertex vt = v1; v1 = v2; v2 = vt;
     }
 
-    EdgeScan e01 = new EdgeScan(p0, p1);
-    EdgeScan e02 = new EdgeScan(p0, p2);
-    EdgeScan e12 = new EdgeScan(p1, p2);
+    EdgeScan e01 = new EdgeScan(v0, v1);
+    EdgeScan e02 = new EdgeScan(v0, v2);
+    EdgeScan e12 = new EdgeScan(v1, v2);
 
     boolean longOnRight;
 
     if (e01.h == 0)
-      longOnRight = p1.x < p0.x;
+      longOnRight = v1.pos.x < v0.pos.x;
     else if (e12.h == 0)
-      longOnRight = p2.x > p1.x;
+      longOnRight = v2.pos.x > v1.pos.x;
     else
       longOnRight = e01.dx < e02.dx;
 
-    EdgeScan left = longOnRight ? e01 : e02;
-    EdgeScan right = longOnRight ? e02 : e01;
-
-    for (int i = 0; i < e01.h; i++, left.next(), right.next())
-      span(left.xi, right.xi, left.y, col);
-
-    if (longOnRight)
-      left = e12;
-    else
-      right = e12;
-
-    for (int i = 0; i < e12.h; i++, left.next(), right.next())
-      span(left.xi, right.xi, left.y, col);
-  }
-  
-  void reset() {
-    polygons.clear();
-  }
-
-  void add(Polygon p) {
-    if (p.vertex.length > 2) {
-      p.updateDepth();
-      polygons.add(p);
+    if (longOnRight) {
+      span(e01, e02, e01.y, e01.h);
+      span(e12, e02, e12.y, e12.h);
+    } else {
+      span(e02, e01, e01.y, e01.h);
+      span(e02, e12, e12.y, e12.h);
     }
   }
 
-  void draw() {
-    Collections.sort(polygons);
-    
-    for (Polygon p : polygons) {
-      Vector3D[] pt = new Vector3D[p.vertex.length];
+  void draw(Polygon polygon) {
+    Vertex[] vertex = polygon.vertex;
 
-      for (int i = 0; i < p.vertex.length; i++) {
-        float x = 0.5f * (parent.width - 1) * (p.vertex[i].pos.x + 1.0f);
-        float y = 0.5f * (parent.height - 1) * (p.vertex[i].pos.y + 1.0f);
-        pt[i] = new Vector3D(x, y, p.vertex[i].pos.z);
+    for (int i = 0; i < vertex.length; i++) {
+      Vector3D p = vertex[i].pos;
+      // if w is zero the vector has been projected onto 2d plane
+      if (p.w != 0.0f) {
+        p.x = 0.5f * (width - 1) * (p.x + 1.0f);
+        p.y = 0.5f * (height - 1) * (p.y + 1.0f);
+        p.w = 0.0f;
       }
-
-      int color = parent.lerpColor(0, p.color, p.normal.z);
-
-      for (int i = 2; i < pt.length; i++)
-        triangle(pt[0], pt[i - 1], pt[i], color);
     }
+
+    color = parent.lerpColor(0, polygon.color, polygon.normal.z);
+
+    for (int i = 2; i < vertex.length; i++)
+      draw(vertex[0], vertex[i - 1], vertex[i]);
   }
 };
