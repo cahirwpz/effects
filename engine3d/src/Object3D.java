@@ -71,7 +71,11 @@ public class Object3D {
     for (int i = 0; i < vertex.length; i++) {
       t.transform(vertex[i], mesh.vertex[i]);
       vertex[i].scale(1.0f / vertex[i].w);
-      clipFlags[i] = Frustum.clipFlags(vertex[i]);
     }
+  }
+  
+  void updateClipFlags(Frustum f) {
+    for (int i = 0; i < vertex.length; i++)
+      clipFlags[i] = f.clipFlags(vertex[i]);  
   }
 }

@@ -19,13 +19,13 @@ public class Polygon implements Comparable<Polygon> {
     return String.format("(%s)", s);
   }
 
-  void refreshNormal() {
+  void updateNormal() {
     Vector3D u = Vector3D.sub(vertex[1].pos, vertex[0].pos);
     Vector3D v = Vector3D.sub(vertex[1].pos, vertex[2].pos);
     normal = Vector3D.normalize(Vector3D.cross(u, v), 1.0f);
   }
   
-  void refreshDepth() {
+  void updateDepth() {
     depth = 0.0f;
     for (Vertex v : vertex)
       depth += v.pos.z;

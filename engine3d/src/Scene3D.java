@@ -1,14 +1,17 @@
-import java.util.*;
+import java.util.ArrayList;
 
 public class Scene3D {
   ArrayList<Object3D> objects;
   Matrix3D view, projection;
+  Frustum frustum;
   
   Scene3D() {
     objects = new ArrayList<Object3D>();
     
     perspective(45.0f, 4.0f / 3.0f, 1.0f, 100.0f);
     view = new Matrix3D();
+    
+    frustum = new Frustum();
   }
 
   void add(Object3D obj) {
@@ -28,9 +31,10 @@ public class Scene3D {
     
     for (Object3D obj : objects) {
       obj.transform(view, projection);
+      obj.updateClipFlags(frustum);
  
       for (Polygon p : obj.polygon) {
-        p.refreshNormal();
+        p.updateNormal();
                 
         int outsideFlags = -1;
         int clipFlags = 0;
@@ -48,7 +52,7 @@ public class Scene3D {
           continue;
 
         if (clipFlags != 0)
-          p = Frustum.clip(p, clipFlags);
+          p = frustum.clipPolygon(p, clipFlags);
 
         if (p != null)
           r.add(p);

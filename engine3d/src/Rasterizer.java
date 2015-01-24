@@ -142,7 +142,7 @@ public class Rasterizer {
 
   void add(Polygon p) {
     if (p.vertex.length > 2) {
-      p.refreshDepth();
+      p.updateDepth();
       polygons.add(p);
     }
   }

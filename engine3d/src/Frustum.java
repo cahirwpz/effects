@@ -2,172 +2,203 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Frustum {
-  static final int LEFT   = 1;
-  static final int RIGHT  = 2;
-  static final int TOP    = 4;
-  static final int BOTTOM = 8;
-  static final int NEAR   = 16;
-  static final int FAR    = 32;
-  
-  static boolean left(int plane) {
-    return (plane & LEFT) != 0;
-  }
-  
-  static boolean right(int plane) {
-    return (plane & RIGHT) != 0;
-  }
-  
-  static boolean top(int plane) {
-    return (plane & TOP) != 0;
-  }
-  
-  static boolean bottom(int plane) {
-    return (plane & BOTTOM) != 0;
-  }
-  
-  static boolean near(int plane) {
-    return (plane & NEAR) != 0;
-  }
-  
-  static boolean far(int plane) {
-    return (plane & FAR) != 0;
-  }
-  
-  static int clipFlags(Vector3D pos) {
-    int flags = 0;
+  abstract class Plane {
+    static final int LEFT   = 1;
+    static final int RIGHT  = 2;
+    static final int TOP    = 4;
+    static final int BOTTOM = 8;
+    static final int NEAR   = 16;
+    static final int FAR    = 32;
     
-    if (pos.x < -1.0f)
-      flags |= LEFT;
-    if (pos.x >= 1.0f)
-      flags |= RIGHT;
-    if (pos.y < -1.0f)
-      flags |= TOP;
-    if (pos.y >= 1.0f)
-      flags |= BOTTOM;
-    if (pos.z < -1.0f)
-      flags |= NEAR;
-    if (pos.z >= 1.0f)
-      flags |= FAR;
+    abstract int number();
+    abstract boolean isInside(Vector3D pos);
+    abstract Vertex clipEdge(Vertex s, Vertex e);
+
+    Vertex[] clipPolygon(Vertex[] vertex) {
+      List<Vertex> out = new ArrayList<>();
+      Vertex S = vertex[0];
+      boolean S_inside = isInside(S.pos);
+      boolean needClose = true;
+
+      if (S_inside) {
+        needClose = false;
+        out.add(S);
+      }
+
+      for (int i = 1; i < vertex.length; i++) {
+        Vertex E = vertex[i];
+        boolean E_inside = isInside(E.pos);
+
+        if (S_inside && E_inside) {
+          out.add(E);
+        } else if (S_inside && !E_inside) {
+          out.add(clipEdge(S, E));
+        } else if (!S_inside && E_inside) {
+          out.add(clipEdge(E, S));
+          out.add(E);
+        }
+
+        S_inside = E_inside;
+        S = E;
+      }
+
+      if (out.size() == 0)
+        return null;
+
+      if (needClose)
+        out.add(out.get(0));
+
+      return out.toArray(new Vertex[out.size()]);
+    }
+  };
+
+  class Left extends Plane {
+    int number() {
+      return LEFT;
+    }
+    
+    boolean isInside(Vector3D pos) {
+      return pos.x >= -1.0f;
+    }
+
+    Vertex clipEdge(Vertex s, Vertex e) {
+      Vector3D d = Vector3D.sub(s.pos, e.pos);
+      Vertex ns = s.copy();
+
+      float t = (-1.0f - e.pos.x) / d.x;
+      ns.pos = new Vector3D(-1.0f, e.pos.y + d.y * t, e.pos.z + d.z * t);
+      return ns;
+    }
+  };
+
+  class Right extends Plane {
+    int number() {
+      return RIGHT;
+    }
+
+    boolean isInside(Vector3D pos) {
+      return pos.x <= 1.0f;
+    }
+
+    Vertex clipEdge(Vertex s, Vertex e) {
+      Vector3D d = Vector3D.sub(s.pos, e.pos);
+      Vertex ns = s.copy();
+      
+      float t = (1.0f - e.pos.x) / d.x;
+      ns.pos = new Vector3D(1.0f, e.pos.y + d.y * t, e.pos.z + d.z * t);
+      return ns;
+    }
+  };
+
+  class Top extends Plane {
+    int number() {
+      return TOP;
+    }
+
+    boolean isInside(Vector3D pos) {
+      return pos.y >= -1.0f;
+    }
+
+    Vertex clipEdge(Vertex s, Vertex e) {
+      Vector3D d = Vector3D.sub(s.pos, e.pos);
+      Vertex ns = s.copy();
+      
+      float t = (-1.0f - e.pos.y) / d.y;
+      ns.pos = new Vector3D(e.pos.x + d.x * t, -1.0f, e.pos.z + d.z * t);
+      return ns;
+    }
+  };
+
+  class Bottom extends Plane {
+    int number() {
+      return BOTTOM;
+    }
+
+    boolean isInside(Vector3D pos) {
+      return pos.y <= 1.0f;
+    }
+
+    Vertex clipEdge(Vertex s, Vertex e) {
+      Vector3D d = Vector3D.sub(s.pos, e.pos);
+      Vertex ns = s.copy();
+      float t = (1.0f - e.pos.y) / d.y;
+      ns.pos = new Vector3D(e.pos.x + d.x * t, 1.0f, e.pos.z + d.z * t);
+      return ns;
+    }
+  };
+
+  class Near extends Plane {
+    int number() {
+      return NEAR;
+    }
+
+    boolean isInside(Vector3D pos) {
+      return pos.z >= -1.0f;
+    }
+
+    Vertex clipEdge(Vertex s, Vertex e) {
+      Vector3D d = Vector3D.sub(s.pos, e.pos);
+      Vertex ns = s.copy();
+      float t = (-1.0f - e.pos.z) / d.z;
+      ns.pos = new Vector3D(e.pos.x + d.x * t, e.pos.y + d.y * t, -1.0f);
+      return ns;
+    }
+  };
+
+  class Far extends Plane {
+    int number() {
+      return FAR;
+    }
+
+    boolean isInside(Vector3D pos) {
+      return pos.z <= 1.0f;
+    }
+
+    Vertex clipEdge(Vertex s, Vertex e) {
+      Vector3D d = Vector3D.sub(s.pos, e.pos);
+      Vertex ns = s.copy();
+      
+      float t = (1.0f - e.pos.z) / d.z;
+      ns.pos = new Vector3D(e.pos.x + d.x * t, e.pos.y + d.y * t, 1.0f);
+      return ns;
+    }
+  }
+
+  Plane[] planes;
+
+  Frustum() {
+    planes = new Plane[6];
+    planes[0] = new Left();
+    planes[1] = new Right();
+    planes[2] = new Top();
+    planes[3] = new Bottom();
+    planes[4] = new Near();
+    planes[5] = new Far();
+  }
   
+  int clipFlags(Vector3D pos) {
+    int flags = 0;
+
+    for (Plane p : planes)
+      if (!p.isInside(pos))
+        flags |= p.number();
+
     return flags;
   }
 
-  static boolean checkInside(Vector3D pos, int plane) {
-    if ((plane & LEFT) != 0)
-      return (pos.x >= -1.0f);
-    if ((plane & RIGHT) != 0)
-      return (pos.x <= 1.0f);
-    if ((plane & TOP) != 0)
-      return (pos.y >= -1.0f);
-    if ((plane & BOTTOM) != 0)
-      return (pos.y <= 1.0f);
-    if ((plane & NEAR) != 0)
-      return (pos.z >= -1.0f);
-    if ((plane & FAR) != 0)
-      return (pos.z <= 1.0f);
-    return false;
-  }
-  
-  static Vertex clipEdge(Vertex s, Vertex e, int plane) {
-    float dx = s.pos.x - e.pos.x;
-    float dy = s.pos.y - e.pos.y;
-    float dz = s.pos.z - e.pos.z;
-    Vertex n = s.copy();
-    
-    if (left(plane)) {
-      float t = (-1.0f - e.pos.x) / dx;
-      n.pos = new Vector3D(-1.0f, e.pos.y + dy * t, e.pos.z + dz * t);
-    } else if (right(plane)) {
-      float t = (1.0f - e.pos.x) / dx;
-      n.pos = new Vector3D(1.0f, e.pos.y + dy * t, e.pos.z + dz * t);
-    } else if (top(plane)) {
-      float t = (-1.0f - e.pos.y) / dy;
-      n.pos = new Vector3D(e.pos.x + dx * t, -1.0f, e.pos.z + dz * t);
-    } else if (bottom(plane)) {
-      float t = (1.0f - e.pos.y) / dy;
-      n.pos = new Vector3D(e.pos.x + dx * t, 1.0f, e.pos.z + dz * t);
-    } else if (near(plane)) {
-      float t = (-1.0f - e.pos.z) / dz;
-      n.pos = new Vector3D(e.pos.x + dx * t, e.pos.y + dy * t, -1.0f);
-    } else if (far(plane)) {
-      float t = (1.0f - e.pos.z) / dz;
-      n.pos = new Vector3D(e.pos.x + dx * t, e.pos.y + dy * t, 1.0f);
-    } else {
-      return s;
-    }
-    
-    return n;
-  }
-  
-  
-  static Vertex[] clipToPlane(Vertex[] vertex, int clipFlags, int plane) {
-    if ((clipFlags & plane) == 0)
-      return vertex;
-    
-    List<Vertex> out = new ArrayList<>();  
-    Vertex S = vertex[0];
-    boolean S_inside = Frustum.checkInside(S.pos, plane);
-    boolean needClose = true;
-  
-    if (S_inside) {
-      needClose = false;
-      out.add(S);
-    }
- 
-    for (int i = 1; i < vertex.length; i++) {
-      Vertex E = vertex[i];
-      boolean E_inside = Frustum.checkInside(E.pos, plane);
-  
-      if (S_inside && E_inside) {
-        out.add(E);
-      } else if (S_inside && !E_inside) {
-        out.add(Frustum.clipEdge(S, E, plane));
-      } else if (!S_inside && E_inside) {
-        out.add(Frustum.clipEdge(E, S, plane));
-        out.add(E);
-      }
-  
-      S_inside = E_inside;
-      S = E;
-    }
-  
-    if (out.size() == 0)
-      return null;
+  Polygon clipPolygon(Polygon in, int clipFlags) {
+    Vertex[] vertex = in.vertex;
 
-    if (needClose)
-      out.add(out.get(0));    
-    
-    return out.toArray(new Vertex[out.size()]);
-  }
-  
-  static Polygon clip(Polygon in, int clipFlags) {
-    Vertex[] clipped = in.vertex;
-    
-    clipped = Frustum.clipToPlane(clipped, clipFlags, Frustum.LEFT);
-    if (clipped == null)
-      return null;
-
-    clipped = Frustum.clipToPlane(clipped, clipFlags, Frustum.TOP);
-    if (clipped == null)
-      return null;
-
-    clipped = Frustum.clipToPlane(clipped, clipFlags, Frustum.NEAR);
-    if (clipped == null)
-      return null;
-
-    clipped = Frustum.clipToPlane(clipped, clipFlags, Frustum.RIGHT);
-    if (clipped == null)
-      return null;
+    for (Plane p : planes) {
+      if ((clipFlags & p.number()) == 0)
+        continue;
       
-    clipped = Frustum.clipToPlane(clipped, clipFlags, Frustum.BOTTOM);
-    if (clipped == null)
-      return null;
-      
-    clipped = Frustum.clipToPlane(clipped, clipFlags, Frustum.FAR);
-    if (clipped == null)
-      return null;
+      vertex = p.clipPolygon(vertex);
+      if (vertex == null)
+        return null;
+    }
 
-    Polygon out = new Polygon(clipped, in.color);
+    Polygon out = new Polygon(vertex, in.color);
     out.normal = in.normal;
     out.depth = in.depth;
     return out;
