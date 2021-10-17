@@ -1,11 +1,14 @@
 .DS_Store
-applet
+.settings
+*.applet
+*.jar
 sketch.properties
 application.linux32
 application.linux64
 application.windows32
 application.windows64
 application.macosx
+modes
 libraries
 tools
 *~
